@@ -114,10 +114,6 @@ export function ChatSidebar() {
                     optimisticEventsRef.current.delete(
                       toolInvocation.toolCallId,
                     );
-                  } else {
-                    if (currentTimeArgs)
-                      utils.calendar.getEvents.invalidate(currentTimeArgs);
-                    else utils.calendar.getEvents.invalidate();
                   }
                 }
               }
@@ -128,6 +124,11 @@ export function ChatSidebar() {
                 toolInvocation.state === "result" &&
                 !toolInvocation.result.error
               ) {
+                console.log(
+                  "Invalidating getEvents and getFreeSlots for successful:",
+                  toolInvocation.toolName,
+                  toolInvocation.toolCallId,
+                );
                 if (currentTimeArgs) {
                   utils.calendar.getEvents.invalidate(currentTimeArgs);
                   utils.calendar.getFreeSlots.invalidate(currentTimeArgs);
@@ -166,7 +167,6 @@ export function ChatSidebar() {
               startTime?: Date | string;
               summary?: string;
             };
-
             const mappedArgs: RouterInputs["calendar"]["createEvent"] = {
               calendarId: llmArgs.calendarId ?? "primary",
               createMeetLink: llmArgs.createMeetLink ?? false,
@@ -184,7 +184,6 @@ export function ChatSidebar() {
                 title: llmArgs.summary ?? "Untitled Event",
               },
             };
-
             if (
               !mappedArgs.event.start ||
               !mappedArgs.event.end ||
@@ -196,11 +195,9 @@ export function ChatSidebar() {
               );
               return undefined;
             }
-
             await utils.calendar.getEvents.cancel(currentTimeArgs);
             const previousEvents =
               utils.calendar.getEvents.getData(currentTimeArgs);
-
             const tempOptimisticEventId = uuidv7();
             const optimisticEvent: ProcessedEventType = {
               id: tempOptimisticEventId,
@@ -213,7 +210,6 @@ export function ChatSidebar() {
               start: mappedArgs.event.start,
               title: mappedArgs.event.title,
             };
-
             utils.calendar.getEvents.setData(
               currentTimeArgs,
               (oldEvents: GetEventsQueryOutput) =>
@@ -221,7 +217,6 @@ export function ChatSidebar() {
                   ? [...oldEvents, optimisticEvent]
                   : [optimisticEvent]) as GetEventsQueryOutput,
             );
-
             optimisticEventsRef.current.set(toolCall.toolCallId, {
               optimisticEventId: tempOptimisticEventId,
               previousEvents,
