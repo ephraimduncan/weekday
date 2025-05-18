@@ -19,9 +19,11 @@
     "postinstall": "prisma generate",
     "lint": "next lint",
     "lint:fix": "next lint --fix",
-    "preview": "next build && next start",
+    "preview": "opennextjs-cloudflare && wrangler dev",
     "start": "next start",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "deploy": "opennextjs-cloudflare && wrangler deploy",
+    "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts"
   },
   "dependencies": {
     "@ai-sdk/react": "^1.2.12",
@@ -81,6 +83,7 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.1",
+    "@opennextjs/cloudflare": "^1.0.3",
     "@tailwindcss/postcss": "^4.0.15",
     "@tailwindcss/typography": "^0.5.16",
     "@tanstack/react-query-devtools": "^5.76.1",
@@ -98,7 +101,8 @@
     "prisma": "^6.5.0",
     "tailwindcss": "^4.0.15",
     "typescript": "^5.8.2",
-    "typescript-eslint": "^8.27.0"
+    "typescript-eslint": "^8.27.0",
+    "wrangler": "^4.15.2"
   },
   "ct3aMetadata": {
     "initVersion": "7.39.3"

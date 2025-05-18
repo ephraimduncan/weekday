@@ -44,3 +44,5 @@ yarn-error.log*
 
 # idea files
 .idea
+# OpenNext build output
+.open-next
