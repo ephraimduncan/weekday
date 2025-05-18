@@ -84,6 +84,8 @@ export function ChatSidebar() {
     return null;
   }
 
+  console.log("messages", messages);
+
   return (
     <div className="bg-background flex h-full flex-1 flex-col gap-4 rounded-2xl pt-0">
       <div className="relative flex h-[calc(100vh-1rem)] w-full flex-col overflow-hidden">
