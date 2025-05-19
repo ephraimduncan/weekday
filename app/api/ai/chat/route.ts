@@ -1,7 +1,7 @@
-import { anthropic } from "@ai-sdk/anthropic";
 import { smoothStream, streamText } from "ai";
 import { v7 as uuidv7 } from "uuid";
 
+import { models } from "@/lib/ai/models";
 import { systemPrompt } from "@/lib/ai/system-prompt";
 import {
   createEvent,
@@ -33,7 +33,7 @@ export async function POST(req: Request) {
       experimental_transform: smoothStream({ chunking: "word" }),
       maxSteps: 25,
       messages,
-      model: anthropic("claude-3-7-sonnet-latest"),
+      model: models.openai,
       system: systemPrompt({ currentDate, formattedDate, timezone }),
       tools: {
         createEvent,
