@@ -4,23 +4,17 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "prebuild": "prisma generate --no-engine",
     "build": "next build",
     "check": "next lint && tsc --noEmit",
-    "db:generate": "prisma generate",
-    "db:migrate": "prisma migrate dev",
-    "db:deploy": "prisma migrate deploy",
-    "db:reset": "prisma migrate reset",
-    "db:push": "prisma db push",
-    "db:studio": "prisma studio",
-    "dev": "next dev --turbo",
+    "dev": "bun run with:env next dev --turbo",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,mdx}\" --cache",
     "format:write": "prettier --write \"**/*.{ts,tsx,js,jsx,mdx}\" --cache",
     "lint": "next lint",
     "lint:fix": "next lint --fix",
-    "preview": "next build && next start",
-    "start": "next start",
-    "typecheck": "tsc --noEmit"
+    "preview": "bun run with:env next build && next start",
+    "start": "bun run with:env next start",
+    "typecheck": "tsc --noEmit",
+    "with:env": "dotenv -e ../../.env -e ../../.env.local --"
   },
   "dependencies": {
     "@weekday/auth": "*",
