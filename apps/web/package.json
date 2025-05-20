@@ -14,7 +14,7 @@
     "preview": "bun with:env next build && next start",
     "start": "bun with:env next start",
     "typecheck": "tsc --noEmit",
-    "with:env": "dotenv -e ../../.env -e ../../.env.local --"
+    "with:env": "dotenv -e ../../.env --"
   },
   "dependencies": {
     "@weekday/auth": "*",
