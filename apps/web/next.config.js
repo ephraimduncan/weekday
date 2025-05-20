@@ -12,10 +12,6 @@ const config = {
         hostname: "lh3.googleusercontent.com",
         protocol: "https",
       },
-      {
-        hostname: "res.cloudinary.com",
-        protocol: "https",
-      },
     ],
   },
   reactStrictMode: true,
@@ -24,7 +20,12 @@ const config = {
   //   optimizePackageImports: ["@radix-ui/react-select"],
   //   scrollRestoration: true,
   // },
-  transpilePackages: ["@weekday/api"],
+  transpilePackages: [
+    "@weekday/api",
+    "@weekday/db",
+    "@weekday/env",
+    "@weekday/auth",
+  ],
 };
 
 export default config;
