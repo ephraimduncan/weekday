@@ -1,14 +1,10 @@
 {
   "$schema": "https://turbo.build/schema.json",
-  "globalDependencies": [".env", "tsconfig.base.json"],
+  "globalDependencies": [".env"],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "outputs": ["dist/**"]
-    },
-    "web#build": {
-      "dependsOn": ["^build"],
-      "outputs": [".next/**", "!.next/cache/**"],
+      "outputs": ["dist/**", ".next/**"],
       "env": [
         "BETTER_AUTH_GOOGLE_ID",
         "BETTER_AUTH_GOOGLE_SECRET",
