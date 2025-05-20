@@ -1,0 +1,19 @@
+{
+  "name": "@weekday/lib",
+  "version": "0.0.0",
+  "main": "./index.ts",
+  "types": "./index.ts",
+  "scripts": {
+    "lint": "eslint *.ts*"
+  },
+  "dependencies": {
+    "@weekday/auth": "*",
+    "@weekday/db": "*",
+    "date-fns": "^3.3.1",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "eslint": "^9.23.0",
+    "typescript": "^5.8.2"
+  }
+}

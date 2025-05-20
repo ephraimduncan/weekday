@@ -1,0 +1,19 @@
+{
+  "name": "@weekday/auth",
+  "version": "0.0.0",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "scripts": {
+    "lint": "eslint *.ts*"
+  },
+  "dependencies": {
+    "@weekday/db": "*",
+    "@weekday/env": "*",
+    "next": "^15.3.2",
+    "better-auth": "^1.2.5"
+  },
+  "devDependencies": {
+    "eslint": "^9.23.0",
+    "typescript": "^5.8.2"
+  }
+}

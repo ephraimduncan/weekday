@@ -1,0 +1,54 @@
+import { cache } from "react";
+
+import { betterAuth as betterAuthClient } from "better-auth";
+import { prismaAdapter } from "better-auth/adapters/prisma";
+import { nextCookies } from "better-auth/next-js";
+import { headers } from "next/headers";
+
+import { db } from "@weekday/db";
+import { env } from "@weekday/env";
+
+const betterAuth = betterAuthClient({
+  database: prismaAdapter(db, {
+    provider: "postgresql",
+  }),
+  databaseHooks: {
+    account: {
+      create: {
+        async before(account) {
+          console.log(account, "account");
+        },
+      },
+    },
+  },
+  plugins: [nextCookies()],
+  session: {
+    expiresIn: 60 * 60 * 24 * 14,
+    updateAge: 60 * 60 * 24,
+  },
+  socialProviders: {
+    google: {
+      accessType: "offline",
+      clientId: env.BETTER_AUTH_GOOGLE_ID,
+      clientSecret: env.BETTER_AUTH_GOOGLE_SECRET,
+      scope: [
+        "openid",
+        "email",
+        "profile",
+        "https://www.googleapis.com/auth/calendar",
+      ],
+    },
+  },
+});
+
+export const { handler } = betterAuth;
+export const authInstance = betterAuth;
+
+export const auth = cache(async () => {
+  const session = await betterAuth.api.getSession({
+    headers: await headers(),
+  });
+  return session;
+});
+
+export type Session = typeof betterAuth.$Infer.Session;
