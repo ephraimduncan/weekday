@@ -4,14 +4,13 @@
   "main": "./index.ts",
   "types": "./index.ts",
   "scripts": {
-    "dev": "prisma studio",
     "postinstall": "prisma generate",
-    "db:generate": "prisma generate",
-    "db:migrate": "prisma migrate dev",
-    "db:deploy": "prisma migrate deploy",
-    "db:reset": "prisma migrate reset",
-    "db:push": "prisma db push",
-    "db:studio": "prisma studio"
+    "generate": "prisma generate",
+    "migrate": "prisma migrate dev",
+    "deploy": "prisma migrate deploy",
+    "reset": "prisma migrate reset",
+    "push": "prisma db push",
+    "studio": "prisma studio"
   },
   "dependencies": {
     "@prisma/client": "^6.5.0",

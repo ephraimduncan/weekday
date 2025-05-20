@@ -1,16 +1,21 @@
 {
+  "name": "weekday-calendar",
   "private": true,
   "workspaces": [
-    "apps/*",
-    "packages/*"
+    "apps/**",
+    "packages/**"
   ],
-  "packageManager": "pnpm@10.6.3",
+  "packageManager": "bun@1.2.9",
   "scripts": {
-    "build": "turbo run build",
-    "dev": "cd apps/web && npm run dev",
-    "clean": "find . -name node_modules -o -name .next -o -name .expo -type d -prune | xargs rm -rf",
-    "lint": "turbo run lint",
-    "format": "prettier --write \"**/*.{ts,tsx,md}\""
+    "build": "turbo build",
+    "clean": "git clean -xdf node_modules",
+    "db:generate": "turbo -F @weekday/db generate",
+    "db:push": "turbo -F @weekday/db push",
+    "db:studio": "turbo -F @weekday/db studio",
+    "dev": "turbo dev",
+    "dev:next": "turbo dev --filter=@weekday/web",
+    "format": "prettier --write \"**/*.{ts,tsx,md}\"",
+    "lint": "turbo lint"
   },
   "devDependencies": {
     "prettier": "latest",
