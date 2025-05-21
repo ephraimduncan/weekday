@@ -20,6 +20,22 @@
     "dev": {
       "cache": false,
       "persistent": true
+    },
+    "studio": {
+      "cache": false,
+      "persistent": true
+    },
+    "generate": {
+      "cache": false,
+      "persistent": true
+    },
+    "push": {
+      "cache": false,
+      "persistent": true
+    },
+    "prebuild": {
+      "cache": false,
+      "persistent": true
     }
   }
 }

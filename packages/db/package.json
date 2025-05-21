@@ -4,13 +4,15 @@
   "main": "./index.ts",
   "types": "./index.ts",
   "scripts": {
-    "postinstall": "prisma generate",
-    "generate": "prisma generate",
-    "migrate": "prisma migrate dev",
-    "deploy": "prisma migrate deploy",
-    "reset": "prisma migrate reset",
-    "push": "prisma db push",
-    "studio": "prisma studio"
+    "prebuild": "bun with:env prisma generate --no-engine",
+    "postinstall": "bun with:env prisma generate",
+    "generate": "bun with:env prisma generate",
+    "migrate": "bun with:env prisma migrate dev",
+    "deploy": "bun with:env prisma migrate deploy",
+    "reset": "bun with:env prisma migrate reset",
+    "push": "bun with:env prisma db push",
+    "studio": "bun with:env prisma studio",
+    "with:env": "dotenv -e ../../.env --"
   },
   "dependencies": {
     "@prisma/client": "^6.5.0",
