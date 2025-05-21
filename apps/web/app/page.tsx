@@ -10,6 +10,7 @@ import { ResizablePanelsClient } from "@/components/resizable-panels-client";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 
 export const metadata: Metadata = {
+  description: "The open source Google Calendar alternative",
   title: "Weekday Calendar",
 };
 
