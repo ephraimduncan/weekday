@@ -1,8 +1,7 @@
 import { ProcessedCalendarEventSchema } from "@weekday/api";
+import { api } from "@weekday/web/trpc/server";
 import { tool } from "ai";
 import { z } from "zod";
-
-import { api } from "@/trpc/server";
 
 type ProcessedCalendarEvent = z.infer<typeof ProcessedCalendarEventSchema>;
 

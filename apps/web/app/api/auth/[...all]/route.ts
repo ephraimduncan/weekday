@@ -1,5 +1,3 @@
-import { handler } from "@weekday/auth";
-// TODO: move this to auth package
-import { toNextJsHandler } from "better-auth/next-js";
+import { handler, toNextJsHandler } from "@weekday/auth";
 
 export const { GET, POST } = toNextJsHandler(handler);

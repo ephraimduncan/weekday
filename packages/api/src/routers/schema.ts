@@ -15,7 +15,7 @@ export const CalendarListEntrySchema = z.object({
       z.object({
         method: z.string(),
         minutes: z.number().int(),
-      }),
+      })
     )
     .optional(),
   deleted: z.boolean().optional(),
@@ -23,7 +23,7 @@ export const CalendarListEntrySchema = z.object({
   etag: z.string().optional(),
   foregroundColor: z.string().optional(),
   hidden: z.boolean().optional(),
-  kind: z.string().optional(), // Keep this to match Google's structure
+  kind: z.string().optional(),
   location: z.string().optional(),
   notificationSettings: z
     .object({
@@ -31,7 +31,7 @@ export const CalendarListEntrySchema = z.object({
         z.object({
           method: z.string(),
           type: z.string(),
-        }),
+        })
       ),
     })
     .optional(),

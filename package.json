@@ -1,5 +1,5 @@
 {
-  "name": "weekday-calendar",
+  "name": "weekday",
   "private": true,
   "workspaces": [
     "apps/**",
@@ -15,7 +15,8 @@
     "db:studio": "turbo run studio --filter=@weekday/db",
     "dev": "turbo dev",
     "dev:next": "turbo dev --filter=@weekday/web",
-    "format": "prettier --write \"**/*.{ts,tsx,md}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,mdx}\" --cache",
+    "format:write": "prettier --write \"**/*.{ts,tsx,js,jsx,mdx}\" --cache",
     "lint": "turbo lint"
   },
   "devDependencies": {

@@ -2,7 +2,10 @@ import { cache } from "react";
 
 import { betterAuth as betterAuthClient } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
-import { nextCookies } from "better-auth/next-js";
+import {
+  toNextJsHandler as betterAuthToNextJsHandler,
+  nextCookies,
+} from "better-auth/next-js";
 import { headers } from "next/headers";
 
 import { db } from "@weekday/db";
@@ -43,6 +46,7 @@ const betterAuth = betterAuthClient({
 
 export const { handler } = betterAuth;
 export const authInstance = betterAuth;
+export const toNextJsHandler = betterAuthToNextJsHandler;
 
 export const auth = cache(async () => {
   const session = await betterAuth.api.getSession({
