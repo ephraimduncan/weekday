@@ -7,7 +7,6 @@
   ],
   "packageManager": "bun@1.2.9",
   "scripts": {
-    "prebuild": "turbo run prebuild --filter=@weekday/db",
     "build": "turbo build",
     "clean": "git clean -xdf node_modules",
     "db:generate": "turbo run generate --filter=@weekday/db",
