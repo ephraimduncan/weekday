@@ -1,15 +1,15 @@
 // File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
 
-import { APIResource } from '../core/resource';
-import { APIPromise } from '../core/api-promise';
-import { RequestOptions } from '../internal/request-options';
+import { APIPromise } from "../core/api-promise";
+import { APIResource } from "../core/resource";
+import { type RequestOptions } from "../internal/request-options";
 
 export class Colors extends APIResource {
   /**
    * Returns the color definitions for calendars and events.
    */
   list(options?: RequestOptions): APIPromise<ColorListResponse> {
-    return this._client.get('/colors', options);
+    return this._client.get("/colors", options);
   }
 }
 

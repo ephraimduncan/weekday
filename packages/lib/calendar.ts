@@ -1,9 +1,20 @@
-import { ProcessedCalendarEventSchema } from "@weekday/api";
-import { authInstance } from "@weekday/auth";
 import { type PrismaClient } from "@weekday/db";
+import { type Event as GoogleCalendarEvent } from "@weekday/google-calendar";
 import { z } from "zod";
 
 import { GOOGLE_CALENDAR_COLORS } from "./constants";
+
+export const ProcessedCalendarEventSchema = z.object({
+  id: z.string(),
+  allDay: z.boolean(),
+  calendarId: z.string(),
+  color: z.string(),
+  description: z.string().optional(),
+  end: z.date(),
+  location: z.string().optional(),
+  start: z.date(),
+  title: z.string(),
+});
 
 export type Account = {
   id: string;
@@ -11,28 +22,6 @@ export type Account = {
   refreshToken: string | null;
 };
 
-export type GoogleCalendarEntry = {
-  id: string;
-  [key: string]: any;
-  accessRole?: string;
-  backgroundColor?: string;
-  foregroundColor?: string;
-  primary?: boolean;
-  summary?: string;
-};
-
-export type GoogleEvent = {
-  id: string;
-  [key: string]: any;
-  colorId?: string;
-  description?: string;
-  end?: { date?: string; dateTime?: string };
-  location?: string;
-  start?: { date?: string; dateTime?: string };
-  summary?: string;
-};
-
-// Helper functions
 export async function getGoogleAccount(
   db: PrismaClient,
   userId: string
@@ -56,128 +45,41 @@ export async function getGoogleAccount(
   return account;
 }
 
-export function createHeaders(accessToken: string): Headers {
-  const headers = new Headers();
-  headers.append("Authorization", `Bearer ${accessToken}`);
-  headers.append("Accept", "application/json");
-  return headers;
-}
-
-export function createRequestOptions(
-  headers: Headers,
-  method: string = "GET",
-  body?: string
-): RequestInit {
-  const options: RequestInit = {
-    cache: "no-cache",
-    headers,
-    method,
-    mode: "cors",
-  };
-
-  if (body) {
-    options.body = body;
-  }
-
-  return options;
-}
-
-export async function refreshTokenIfNeeded(
-  response: Response,
-  account: Account,
-  userId: string,
-  headers: Headers
-): Promise<{ accessToken: string | null; success: boolean }> {
-  if (response.status !== 401 || !account.refreshToken) {
-    return { accessToken: account.accessToken, success: false };
-  }
-
-  console.log("Access token expired, refreshing via Better Auth...");
-
-  const refreshedAccount = await authInstance.api.refreshToken({
-    body: {
-      accountId: account.id,
-      providerId: "google",
-      userId: userId,
-    },
-  });
-
-  if (!refreshedAccount?.accessToken) {
-    return { accessToken: account.accessToken, success: false };
-  }
-
-  headers.set("Authorization", `Bearer ${refreshedAccount.accessToken}`);
-  return { accessToken: refreshedAccount.accessToken, success: true };
-}
-
-export async function executeRequest(
-  url: string,
-  options: RequestInit,
-  account: Account,
-  userId: string
-): Promise<Response> {
-  let response = await fetch(url, options);
-
-  if (response.status === 401 && account.refreshToken && account.accessToken) {
-    const { accessToken, success } = await refreshTokenIfNeeded(
-      response,
-      account,
-      userId,
-      options.headers as Headers
-    );
-
-    if (success && accessToken) {
-      // Update Authorization header with new token
-      const headers = options.headers as Headers;
-      headers.set("Authorization", `Bearer ${accessToken}`);
-      response = await fetch(url, options);
-    }
-  }
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    console.error(
-      `HTTP error: ${response.status} - ${response.statusText}`,
-      errorText
-    );
-    throw new Error(
-      `HTTP error! status: ${response.status} - ${response.statusText}`
-    );
-  }
-
-  return response;
-}
-
 export function processEventData(
-  item: GoogleEvent,
+  item: GoogleCalendarEvent,
   calendarId: string
 ): z.infer<typeof ProcessedCalendarEventSchema> {
-  const isAllDay = !!item.start?.date;
-  const startStr = (item.start?.dateTime ?? item.start?.date) as
+  const eventItem = item as any;
+
+  const isAllDay = !!eventItem?.start?.date;
+  const startStr = (eventItem?.start?.dateTime ?? eventItem?.start?.date) as
     | string
     | undefined;
-  const endStr = (item.end?.dateTime ?? item.end?.date) as string | undefined;
+  const endStr = (eventItem?.end?.dateTime ?? eventItem?.end?.date) as
+    | string
+    | undefined;
 
-  if (!startStr || !endStr) {
-    throw new Error("Event is missing required start/end time information");
+  if (!startStr || !endStr || !eventItem.id) {
+    throw new Error(
+      "Event is missing required start/end time or id information"
+    );
   }
 
   let eventColor = undefined;
-  const colorId = item.colorId as string | undefined;
-  if (colorId && GOOGLE_CALENDAR_COLORS[colorId]) {
-    eventColor = GOOGLE_CALENDAR_COLORS[colorId].color;
+  if (eventItem.colorId && GOOGLE_CALENDAR_COLORS[eventItem.colorId]) {
+    eventColor = GOOGLE_CALENDAR_COLORS[eventItem.colorId]?.color;
   }
 
   return {
-    id: item.id,
+    id: eventItem.id,
     allDay: isAllDay,
     calendarId: calendarId,
     color: eventColor || "blue",
-    description: item.description ?? undefined,
+    description: eventItem.description ?? undefined,
     end: new Date(endStr),
-    location: item.location ?? undefined,
+    location: eventItem.location ?? undefined,
     start: new Date(startStr),
-    title: item.summary ?? "(No title)",
+    title: eventItem.summary ?? "(No title)",
   };
 }
 
@@ -191,7 +93,7 @@ export function prepareEventData(
     start?: Date;
     title?: string;
   },
-  currentEvent?: GoogleEvent
+  currentEvent?: GoogleCalendarEvent
 ): Record<string, any> {
   const eventData: Record<string, any> = { ...currentEvent };
 
@@ -207,7 +109,7 @@ export function prepareEventData(
   }
 
   // Handle date updates
-  const isAllDay = event.allDay ?? !!currentEvent?.start?.date;
+  const isAllDay = event.allDay ?? !!(currentEvent as any)?.start?.date;
 
   if (isAllDay && event.start) {
     const startDate = event.start.toISOString().split("T")[0];

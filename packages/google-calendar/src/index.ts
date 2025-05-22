@@ -1,8 +1,11 @@
 // File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
 
-export { GoogleCalendar as default } from "./client";
-
-export { GoogleCalendar, type ClientOptions } from "./client";
+export {
+  GoogleCalendar as default,
+  GoogleCalendar,
+  RefreshableGoogleCalendar,
+  type ClientOptions,
+} from "./client";
 export { APIPromise } from "./core/api-promise";
 export {
   APIConnectionError,
@@ -20,3 +23,12 @@ export {
   UnprocessableEntityError,
 } from "./core/error";
 export { toFile, type Uploadable } from "./core/uploads";
+export {
+  ACL,
+  Calendars,
+  Events,
+  type ACLRule,
+  type Calendar,
+  type Channel,
+  type Event,
+} from "./resources/calendars";

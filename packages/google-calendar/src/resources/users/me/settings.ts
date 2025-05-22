@@ -1,16 +1,19 @@
 // File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
 
-import { APIResource } from '../../../core/resource';
-import * as ACLAPI from '../../calendars/acl';
-import { APIPromise } from '../../../core/api-promise';
-import { RequestOptions } from '../../../internal/request-options';
-import { path } from '../../../internal/utils/path';
+import { APIPromise } from "../../../core/api-promise";
+import { APIResource } from "../../../core/resource";
+import { type RequestOptions } from "../../../internal/request-options";
+import { path } from "../../../internal/utils/path";
+import * as ACLAPI from "../../calendars/acl";
 
 export class Settings extends APIResource {
   /**
    * Returns a single user setting.
    */
-  retrieve(setting: string, options?: RequestOptions): APIPromise<SettingRetrieveResponse> {
+  retrieve(
+    setting: string,
+    options?: RequestOptions
+  ): APIPromise<SettingRetrieveResponse> {
     return this._client.get(path`/users/me/settings/${setting}`, options);
   }
 
@@ -19,17 +22,20 @@ export class Settings extends APIResource {
    */
   list(
     query: SettingListParams | null | undefined = {},
-    options?: RequestOptions,
+    options?: RequestOptions
   ): APIPromise<SettingListResponse> {
-    return this._client.get('/users/me/settings', { query, ...options });
+    return this._client.get("/users/me/settings", { query, ...options });
   }
 
   /**
    * Watch for changes to Settings resources.
    */
-  watch(params: SettingWatchParams, options?: RequestOptions): APIPromise<ACLAPI.Channel> {
+  watch(
+    params: SettingWatchParams,
+    options?: RequestOptions
+  ): APIPromise<ACLAPI.Channel> {
     const { maxResults, pageToken, syncToken, ...body } = params;
-    return this._client.post('/users/me/settings/watch', {
+    return this._client.post("/users/me/settings/watch", {
       query: { maxResults, pageToken, syncToken },
       body,
       ...options,

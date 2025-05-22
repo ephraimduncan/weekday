@@ -1,4 +1,4 @@
-import { ProcessedCalendarEventSchema } from "@weekday/api";
+import { ProcessedCalendarEventSchema } from "@weekday/lib";
 import { api } from "@weekday/web/trpc/server";
 import { tool } from "ai";
 import { z } from "zod";

@@ -1,16 +1,20 @@
 // File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
 
-import { APIResource } from '../../core/resource';
-import { APIPromise } from '../../core/api-promise';
-import { buildHeaders } from '../../internal/headers';
-import { RequestOptions } from '../../internal/request-options';
-import { path } from '../../internal/utils/path';
+import { APIPromise } from "../../core/api-promise";
+import { APIResource } from "../../core/resource";
+import { buildHeaders } from "../../internal/headers";
+import { type RequestOptions } from "../../internal/request-options";
+import { path } from "../../internal/utils/path";
 
 export class ACL extends APIResource {
   /**
    * Creates an access control rule.
    */
-  createRule(calendarID: string, params: ACLCreateRuleParams, options?: RequestOptions): APIPromise<ACLRule> {
+  createRule(
+    calendarID: string,
+    params: ACLCreateRuleParams,
+    options?: RequestOptions
+  ): APIPromise<ACLRule> {
     const { sendNotifications, ...body } = params;
     return this._client.post(path`/calendars/${calendarID}/acl`, {
       query: { sendNotifications },
@@ -22,11 +26,15 @@ export class ACL extends APIResource {
   /**
    * Deletes an access control rule.
    */
-  deleteRule(ruleID: string, params: ACLDeleteRuleParams, options?: RequestOptions): APIPromise<void> {
+  deleteRule(
+    ruleID: string,
+    params: ACLDeleteRuleParams,
+    options?: RequestOptions
+  ): APIPromise<void> {
     const { calendarId } = params;
     return this._client.delete(path`/calendars/${calendarId}/acl/${ruleID}`, {
       ...options,
-      headers: buildHeaders([{ Accept: '*/*' }, options?.headers]),
+      headers: buildHeaders([{ Accept: "*/*" }, options?.headers]),
     });
   }
 
@@ -36,23 +44,37 @@ export class ACL extends APIResource {
   listRules(
     calendarID: string,
     query: ACLListRulesParams | null | undefined = {},
-    options?: RequestOptions,
+    options?: RequestOptions
   ): APIPromise<ACLListRulesResponse> {
-    return this._client.get(path`/calendars/${calendarID}/acl`, { query, ...options });
+    return this._client.get(path`/calendars/${calendarID}/acl`, {
+      query,
+      ...options,
+    });
   }
 
   /**
    * Returns an access control rule.
    */
-  retrieveRule(ruleID: string, params: ACLRetrieveRuleParams, options?: RequestOptions): APIPromise<ACLRule> {
+  retrieveRule(
+    ruleID: string,
+    params: ACLRetrieveRuleParams,
+    options?: RequestOptions
+  ): APIPromise<ACLRule> {
     const { calendarId } = params;
-    return this._client.get(path`/calendars/${calendarId}/acl/${ruleID}`, options);
+    return this._client.get(
+      path`/calendars/${calendarId}/acl/${ruleID}`,
+      options
+    );
   }
 
   /**
    * Updates an access control rule. This method supports patch semantics.
    */
-  updateRule(ruleID: string, params: ACLUpdateRuleParams, options?: RequestOptions): APIPromise<ACLRule> {
+  updateRule(
+    ruleID: string,
+    params: ACLUpdateRuleParams,
+    options?: RequestOptions
+  ): APIPromise<ACLRule> {
     const { calendarId, sendNotifications, ...body } = params;
     return this._client.patch(path`/calendars/${calendarId}/acl/${ruleID}`, {
       query: { sendNotifications },
@@ -67,7 +89,7 @@ export class ACL extends APIResource {
   updateRuleFull(
     ruleID: string,
     params: ACLUpdateRuleFullParams,
-    options?: RequestOptions,
+    options?: RequestOptions
   ): APIPromise<ACLRule> {
     const { calendarId, sendNotifications, ...body } = params;
     return this._client.put(path`/calendars/${calendarId}/acl/${ruleID}`, {
@@ -80,7 +102,11 @@ export class ACL extends APIResource {
   /**
    * Watch for changes to ACL resources.
    */
-  watchRules(calendarID: string, params: ACLWatchRulesParams, options?: RequestOptions): APIPromise<Channel> {
+  watchRules(
+    calendarID: string,
+    params: ACLWatchRulesParams,
+    options?: RequestOptions
+  ): APIPromise<Channel> {
     const { maxResults, pageToken, showDeleted, syncToken, ...body } = params;
     return this._client.post(path`/calendars/${calendarID}/acl/watch`, {
       query: { maxResults, pageToken, showDeleted, syncToken },

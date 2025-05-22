@@ -2,7 +2,7 @@
 
 import { type GoogleCalendar } from "../client";
 
-import { APIResponseProps, defaultParseResponse } from "../internal/parse";
+import { type APIResponseProps, defaultParseResponse } from "../internal/parse";
 import { type PromiseOrValue } from "../internal/types";
 
 /**

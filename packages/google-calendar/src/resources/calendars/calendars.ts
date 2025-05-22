@@ -1,40 +1,40 @@
 // File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
 
-import { APIResource } from '../../core/resource';
-import * as ACLAPI from './acl';
+import { APIPromise } from "../../core/api-promise";
+import { APIResource } from "../../core/resource";
+import { buildHeaders } from "../../internal/headers";
+import { type RequestOptions } from "../../internal/request-options";
+import { path } from "../../internal/utils/path";
+import * as ACLAPI from "./acl";
 import {
   ACL,
-  ACLCreateRuleParams,
-  ACLDeleteRuleParams,
-  ACLListRulesParams,
-  ACLListRulesResponse,
-  ACLRetrieveRuleParams,
-  ACLRule,
-  ACLUpdateRuleFullParams,
-  ACLUpdateRuleParams,
-  ACLWatchRulesParams,
-  Channel,
-} from './acl';
-import * as EventsAPI from './events';
+  type ACLCreateRuleParams,
+  type ACLDeleteRuleParams,
+  type ACLListRulesParams,
+  type ACLListRulesResponse,
+  type ACLRetrieveRuleParams,
+  type ACLRule,
+  type ACLUpdateRuleFullParams,
+  type ACLUpdateRuleParams,
+  type ACLWatchRulesParams,
+  type Channel,
+} from "./acl";
+import * as EventsAPI from "./events";
 import {
-  Event,
-  EventCreateParams,
-  EventDeleteParams,
-  EventImportParams,
-  EventListInstancesParams,
-  EventListParams,
-  EventMoveParams,
-  EventQuickAddParams,
-  EventRetrieveParams,
-  EventUpdateParams,
-  EventUpdatePartialParams,
-  EventWatchParams,
-  Events,
-} from './events';
-import { APIPromise } from '../../core/api-promise';
-import { buildHeaders } from '../../internal/headers';
-import { RequestOptions } from '../../internal/request-options';
-import { path } from '../../internal/utils/path';
+  type Event,
+  type EventCreateParams,
+  type EventDeleteParams,
+  type EventImportParams,
+  type EventListInstancesParams,
+  type EventListParams,
+  type EventMoveParams,
+  type EventQuickAddParams,
+  type EventRetrieveParams,
+  type EventUpdateParams,
+  type EventUpdatePartialParams,
+  type EventWatchParams,
+  type Events,
+} from "./events";
 
 export class Calendars extends APIResource {
   acl: ACLAPI.ACL = new ACLAPI.ACL(this._client);
@@ -43,8 +43,11 @@ export class Calendars extends APIResource {
   /**
    * Creates a secondary calendar.
    */
-  create(body: CalendarCreateParams, options?: RequestOptions): APIPromise<Calendar> {
-    return this._client.post('/calendars', { body, ...options });
+  create(
+    body: CalendarCreateParams,
+    options?: RequestOptions
+  ): APIPromise<Calendar> {
+    return this._client.post("/calendars", { body, ...options });
   }
 
   /**
@@ -57,8 +60,15 @@ export class Calendars extends APIResource {
   /**
    * Updates metadata for a calendar.
    */
-  update(calendarID: string, body: CalendarUpdateParams, options?: RequestOptions): APIPromise<Calendar> {
-    return this._client.put(path`/calendars/${calendarID}`, { body, ...options });
+  update(
+    calendarID: string,
+    body: CalendarUpdateParams,
+    options?: RequestOptions
+  ): APIPromise<Calendar> {
+    return this._client.put(path`/calendars/${calendarID}`, {
+      body,
+      ...options,
+    });
   }
 
   /**
@@ -68,7 +78,7 @@ export class Calendars extends APIResource {
   delete(calendarID: string, options?: RequestOptions): APIPromise<void> {
     return this._client.delete(path`/calendars/${calendarID}`, {
       ...options,
-      headers: buildHeaders([{ Accept: '*/*' }, options?.headers]),
+      headers: buildHeaders([{ Accept: "*/*" }, options?.headers]),
     });
   }
 
@@ -79,7 +89,7 @@ export class Calendars extends APIResource {
   clear(calendarID: string, options?: RequestOptions): APIPromise<void> {
     return this._client.post(path`/calendars/${calendarID}/clear`, {
       ...options,
-      headers: buildHeaders([{ Accept: '*/*' }, options?.headers]),
+      headers: buildHeaders([{ Accept: "*/*" }, options?.headers]),
     });
   }
 
@@ -89,9 +99,12 @@ export class Calendars extends APIResource {
   updatePartial(
     calendarID: string,
     body: CalendarUpdatePartialParams,
-    options?: RequestOptions,
+    options?: RequestOptions
   ): APIPromise<Calendar> {
-    return this._client.patch(path`/calendars/${calendarID}`, { body, ...options });
+    return this._client.patch(path`/calendars/${calendarID}`, {
+      body,
+      ...options,
+    });
   }
 }
 

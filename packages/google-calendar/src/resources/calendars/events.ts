@@ -1,17 +1,21 @@
 // File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
 
-import { APIResource } from '../../core/resource';
-import * as ACLAPI from './acl';
-import { APIPromise } from '../../core/api-promise';
-import { buildHeaders } from '../../internal/headers';
-import { RequestOptions } from '../../internal/request-options';
-import { path } from '../../internal/utils/path';
+import { APIPromise } from "../../core/api-promise";
+import { APIResource } from "../../core/resource";
+import { buildHeaders } from "../../internal/headers";
+import { type RequestOptions } from "../../internal/request-options";
+import { path } from "../../internal/utils/path";
+import * as ACLAPI from "./acl";
 
 export class Events extends APIResource {
   /**
    * Creates an event.
    */
-  create(calendarID: string, params: EventCreateParams, options?: RequestOptions): APIPromise<Event> {
+  create(
+    calendarID: string,
+    params: EventCreateParams,
+    options?: RequestOptions
+  ): APIPromise<Event> {
     const {
       conferenceDataVersion,
       maxAttendees,
@@ -21,7 +25,13 @@ export class Events extends APIResource {
       ...body
     } = params;
     return this._client.post(path`/calendars/${calendarID}/events`, {
-      query: { conferenceDataVersion, maxAttendees, sendNotifications, sendUpdates, supportsAttachments },
+      query: {
+        conferenceDataVersion,
+        maxAttendees,
+        sendNotifications,
+        sendUpdates,
+        supportsAttachments,
+      },
       body,
       ...options,
     });
@@ -31,15 +41,26 @@ export class Events extends APIResource {
    * Returns an event based on its Google Calendar ID. To retrieve an event using its
    * iCalendar ID, call the events.list method using the iCalUID parameter.
    */
-  retrieve(eventID: string, params: EventRetrieveParams, options?: RequestOptions): APIPromise<Event> {
+  retrieve(
+    eventID: string,
+    params: EventRetrieveParams,
+    options?: RequestOptions
+  ): APIPromise<Event> {
     const { calendarId, ...query } = params;
-    return this._client.get(path`/calendars/${calendarId}/events/${eventID}`, { query, ...options });
+    return this._client.get(path`/calendars/${calendarId}/events/${eventID}`, {
+      query,
+      ...options,
+    });
   }
 
   /**
    * Updates an event.
    */
-  update(eventID: string, params: EventUpdateParams, options?: RequestOptions): APIPromise<Event> {
+  update(
+    eventID: string,
+    params: EventUpdateParams,
+    options?: RequestOptions
+  ): APIPromise<Event> {
     const {
       calendarId,
       alwaysIncludeEmail,
@@ -70,21 +91,31 @@ export class Events extends APIResource {
   list(
     calendarID: string,
     query: EventListParams | null | undefined = {},
-    options?: RequestOptions,
+    options?: RequestOptions
   ): APIPromise<Events> {
-    return this._client.get(path`/calendars/${calendarID}/events`, { query, ...options });
+    return this._client.get(path`/calendars/${calendarID}/events`, {
+      query,
+      ...options,
+    });
   }
 
   /**
    * Deletes an event.
    */
-  delete(eventID: string, params: EventDeleteParams, options?: RequestOptions): APIPromise<void> {
+  delete(
+    eventID: string,
+    params: EventDeleteParams,
+    options?: RequestOptions
+  ): APIPromise<void> {
     const { calendarId, sendNotifications, sendUpdates } = params;
-    return this._client.delete(path`/calendars/${calendarId}/events/${eventID}`, {
-      query: { sendNotifications, sendUpdates },
-      ...options,
-      headers: buildHeaders([{ Accept: '*/*' }, options?.headers]),
-    });
+    return this._client.delete(
+      path`/calendars/${calendarId}/events/${eventID}`,
+      {
+        query: { sendNotifications, sendUpdates },
+        ...options,
+        headers: buildHeaders([{ Accept: "*/*" }, options?.headers]),
+      }
+    );
   }
 
   /**
@@ -94,7 +125,11 @@ export class Events extends APIResource {
    * changed to default and any event-type-specific properties it may have will be
    * dropped.
    */
-  import(calendarID: string, params: EventImportParams, options?: RequestOptions): APIPromise<Event> {
+  import(
+    calendarID: string,
+    params: EventImportParams,
+    options?: RequestOptions
+  ): APIPromise<Event> {
     const { conferenceDataVersion, supportsAttachments, ...body } = params;
     return this._client.post(path`/calendars/${calendarID}/events/import`, {
       query: { conferenceDataVersion, supportsAttachments },
@@ -109,13 +144,16 @@ export class Events extends APIResource {
   listInstances(
     eventID: string,
     params: EventListInstancesParams,
-    options?: RequestOptions,
+    options?: RequestOptions
   ): APIPromise<Events> {
     const { calendarId, ...query } = params;
-    return this._client.get(path`/calendars/${calendarId}/events/${eventID}/instances`, {
-      query,
-      ...options,
-    });
+    return this._client.get(
+      path`/calendars/${calendarId}/events/${eventID}/instances`,
+      {
+        query,
+        ...options,
+      }
+    );
   }
 
   /**
@@ -123,18 +161,29 @@ export class Events extends APIResource {
    * only default events can be moved; birthday, focusTime, fromGmail, outOfOffice
    * and workingLocation events cannot be moved.
    */
-  move(eventID: string, params: EventMoveParams, options?: RequestOptions): APIPromise<Event> {
+  move(
+    eventID: string,
+    params: EventMoveParams,
+    options?: RequestOptions
+  ): APIPromise<Event> {
     const { calendarId, destination, sendNotifications, sendUpdates } = params;
-    return this._client.post(path`/calendars/${calendarId}/events/${eventID}/move`, {
-      query: { destination, sendNotifications, sendUpdates },
-      ...options,
-    });
+    return this._client.post(
+      path`/calendars/${calendarId}/events/${eventID}/move`,
+      {
+        query: { destination, sendNotifications, sendUpdates },
+        ...options,
+      }
+    );
   }
 
   /**
    * Creates an event based on a simple text string.
    */
-  quickAdd(calendarID: string, params: EventQuickAddParams, options?: RequestOptions): APIPromise<Event> {
+  quickAdd(
+    calendarID: string,
+    params: EventQuickAddParams,
+    options?: RequestOptions
+  ): APIPromise<Event> {
     const { text, sendNotifications, sendUpdates } = params;
     return this._client.post(path`/calendars/${calendarID}/events/quickAdd`, {
       query: { text, sendNotifications, sendUpdates },
@@ -148,7 +197,7 @@ export class Events extends APIResource {
   updatePartial(
     eventID: string,
     params: EventUpdatePartialParams,
-    options?: RequestOptions,
+    options?: RequestOptions
   ): APIPromise<Event> {
     const {
       calendarId,
@@ -160,24 +209,31 @@ export class Events extends APIResource {
       supportsAttachments,
       ...body
     } = params;
-    return this._client.patch(path`/calendars/${calendarId}/events/${eventID}`, {
-      query: {
-        alwaysIncludeEmail,
-        conferenceDataVersion,
-        maxAttendees,
-        sendNotifications,
-        sendUpdates,
-        supportsAttachments,
-      },
-      body,
-      ...options,
-    });
+    return this._client.patch(
+      path`/calendars/${calendarId}/events/${eventID}`,
+      {
+        query: {
+          alwaysIncludeEmail,
+          conferenceDataVersion,
+          maxAttendees,
+          sendNotifications,
+          sendUpdates,
+          supportsAttachments,
+        },
+        body,
+        ...options,
+      }
+    );
   }
 
   /**
    * Watch for changes to Events resources.
    */
-  watch(calendarID: string, params: EventWatchParams, options?: RequestOptions): APIPromise<ACLAPI.Channel> {
+  watch(
+    calendarID: string,
+    params: EventWatchParams,
+    options?: RequestOptions
+  ): APIPromise<ACLAPI.Channel> {
     const {
       alwaysIncludeEmail,
       eventTypes,

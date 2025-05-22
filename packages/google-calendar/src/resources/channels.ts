@@ -1,19 +1,22 @@
 // File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
 
-import { APIResource } from '../core/resource';
-import { APIPromise } from '../core/api-promise';
-import { buildHeaders } from '../internal/headers';
-import { RequestOptions } from '../internal/request-options';
+import { APIPromise } from "../core/api-promise";
+import { APIResource } from "../core/resource";
+import { buildHeaders } from "../internal/headers";
+import { type RequestOptions } from "../internal/request-options";
 
 export class Channels extends APIResource {
   /**
    * Stop watching resources through this channel
    */
-  stopWatching(body: ChannelStopWatchingParams, options?: RequestOptions): APIPromise<void> {
-    return this._client.post('/channels/stop', {
+  stopWatching(
+    body: ChannelStopWatchingParams,
+    options?: RequestOptions
+  ): APIPromise<void> {
+    return this._client.post("/channels/stop", {
       body,
       ...options,
-      headers: buildHeaders([{ Accept: '*/*' }, options?.headers]),
+      headers: buildHeaders([{ Accept: "*/*" }, options?.headers]),
     });
   }
 }

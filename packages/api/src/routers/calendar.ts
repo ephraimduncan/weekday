@@ -1,27 +1,33 @@
 import { v7 as uuidv7 } from "uuid";
 import { z } from "zod";
 
+import { RefreshableGoogleCalendar } from "@weekday/google-calendar";
 import {
-  GOOGLE_CALENDAR_LIST_API_URL,
-  GOOGLE_FREEBUSY_API_URL,
-  type GoogleEvent,
   calculateFreeSlotsFromBusy,
-  createHeaders,
-  createRequestOptions,
-  executeRequest,
   getGoogleAccount,
   mergeAndSortBusyIntervals,
   prepareEventData,
+  ProcessedCalendarEventSchema,
   processEventData,
 } from "@weekday/lib";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 import {
-  CalendarListResponseSchema,
   GoogleFreeBusyResponseSchema,
-  ProcessedCalendarEventSchema,
   ProcessedCalendarListEntrySchema,
   TimeSlotSchema,
 } from "./schema";
+
+// TODO: db: any -> PrismaClient
+async function createGoogleCalendarClient(db: any, userId: string) {
+  const account = await getGoogleAccount(db, userId);
+  if (!account.accessToken) throw new Error("No access token found");
+
+  return new RefreshableGoogleCalendar({
+    apiKey: account.accessToken,
+    db,
+    userId,
+  });
+}
 
 export const calendarRouter = createTRPCRouter({
   createEvent: protectedProcedure
@@ -58,12 +64,10 @@ export const calendarRouter = createTRPCRouter({
     )
     .output(ProcessedCalendarEventSchema)
     .mutation(async ({ ctx, input }) => {
-      const account = await getGoogleAccount(ctx.db, ctx.session.user.id);
-
-      if (!account.accessToken) throw new Error("No access token found");
-
-      const headers = createHeaders(account.accessToken);
-      headers.append("Content-Type", "application/json");
+      const client = await createGoogleCalendarClient(
+        ctx.db,
+        ctx.session.user.id
+      );
 
       const baseEventData = prepareEventData({
         allDay: input.event.allDay,
@@ -91,36 +95,24 @@ export const calendarRouter = createTRPCRouter({
         };
       }
 
-      const queryParams = new URLSearchParams();
+      const createParams: any = {
+        ...finalEventPayload,
+      };
+
       if (input.createMeetLink) {
-        queryParams.append("conferenceDataVersion", "1");
+        createParams.conferenceDataVersion = 1;
       }
 
       if (input.event.attendees && input.event.attendees.length > 0) {
-        queryParams.append("sendUpdates", "all");
+        createParams.sendUpdates = "all";
       }
 
-      const calendarApiBaseUrl = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(input.calendarId)}/events`;
-      const finalUrl = queryParams.toString()
-        ? `${calendarApiBaseUrl}?${queryParams.toString()}`
-        : calendarApiBaseUrl;
-
-      const options = createRequestOptions(
-        headers,
-        "POST",
-        JSON.stringify(finalEventPayload)
-      );
-
       try {
-        const response = await executeRequest(
-          finalUrl,
-          options,
-          account,
-          ctx.session.user.id
+        const createdEvent = await client.calendars.events.create(
+          input.calendarId,
+          createParams
         );
-
-        const item = await response.json();
-        return processEventData(item, input.calendarId);
+        return processEventData(createdEvent, input.calendarId);
       } catch (error) {
         console.error("Error creating event:", error);
         throw error;
@@ -136,100 +128,45 @@ export const calendarRouter = createTRPCRouter({
     )
     .output(ProcessedCalendarEventSchema)
     .mutation(async ({ ctx, input }) => {
-      const account = await getGoogleAccount(ctx.db, ctx.session.user.id);
-
-      if (!account.accessToken) throw new Error("No access token found");
-
-      const headers = createHeaders(account.accessToken);
+      const client = await createGoogleCalendarClient(
+        ctx.db,
+        ctx.session.user.id
+      );
 
       let eventToReturn: any;
       try {
-        const getUrl = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(input.calendarId)}/events/${encodeURIComponent(input.eventId)}`;
-        const getOptions = createRequestOptions(headers);
-        const response = await executeRequest(
-          getUrl,
-          getOptions,
-          account,
-          ctx.session.user.id
-        );
-        const item = await response.json();
-        if (response.status === 404) {
-          throw new Error("Event not found, cannot delete.");
-        }
-        if (!response.ok) {
-          const errorData = item as { error?: { message?: string } };
-          const errorMessage =
-            errorData.error?.message ||
-            `Failed to fetch event before deletion (status: ${response.status})`;
-          throw new Error(errorMessage);
-        }
-        eventToReturn = processEventData(item, input.calendarId);
+        const event = await client.calendars.events.retrieve(input.eventId, {
+          calendarId: input.calendarId,
+        });
+        eventToReturn = processEventData(event, input.calendarId);
       } catch (error) {
-        console.error("Error fetching event before deletion in tRPC:", error);
-        if (error instanceof Error) {
-          throw error;
-        }
-        throw new Error(
-          "Failed to fetch event details before attempting deletion."
-        );
+        console.error("Error fetching event before deletion:", error);
+        throw new Error("Event not found, cannot delete.");
       }
 
-      const deleteUrl = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(input.calendarId)}/events/${encodeURIComponent(input.eventId)}`;
-      const deleteOptions = createRequestOptions(headers, "DELETE");
-
       try {
-        const deleteResponse = await executeRequest(
-          deleteUrl,
-          deleteOptions,
-          account,
-          ctx.session.user.id
-        );
-        if (!deleteResponse.ok && deleteResponse.status !== 204) {
-          let googleErrorMessage = "Failed to delete the event.";
-          try {
-            const errorBody = await deleteResponse.json();
-            googleErrorMessage =
-              errorBody?.error?.message || googleErrorMessage;
-          } catch (e) {
-            /* Ignore parsing error */
-          }
-          throw new Error(googleErrorMessage);
-        }
-
+        await client.calendars.events.delete(input.eventId, {
+          calendarId: input.calendarId,
+        });
         return eventToReturn;
       } catch (error) {
-        console.error("Error deleting event in tRPC:", error);
-        if (error instanceof Error) {
-          throw error;
-        }
-        throw new Error(
-          "Failed to delete the event after fetching its details."
-        );
+        console.error("Error deleting event:", error);
+        throw error;
       }
     }),
 
   getCalendars: protectedProcedure
     .output(z.array(ProcessedCalendarListEntrySchema))
     .query(async ({ ctx }) => {
-      const account = await getGoogleAccount(ctx.db, ctx.session.user.id);
-
-      if (!account.accessToken) throw new Error("No access token found");
-
-      const headers = createHeaders(account.accessToken);
-      const options = createRequestOptions(headers);
+      const client = await createGoogleCalendarClient(
+        ctx.db,
+        ctx.session.user.id
+      );
 
       try {
-        const response = await executeRequest(
-          GOOGLE_CALENDAR_LIST_API_URL,
-          options,
-          account,
-          ctx.session.user.id
-        );
+        const response = await client.users.me.calendarList.list();
 
-        const data = await response.json();
-        const parsedData = CalendarListResponseSchema.parse(data);
-
-        const processedItems = parsedData.items.map((item) => {
+        const processedItems = (response.items || []).map((item: any) => {
           const isEmailSummary = z
             .string()
             .email()
@@ -250,8 +187,7 @@ export const calendarRouter = createTRPCRouter({
           };
         });
 
-        // Sort calendars - primary calendar first, then alphabetically
-        processedItems.sort((a, b) => {
+        processedItems.sort((a: any, b: any) => {
           if (a.primary && !b.primary) {
             return -1;
           }
@@ -263,7 +199,7 @@ export const calendarRouter = createTRPCRouter({
 
         return processedItems;
       } catch (error) {
-        console.error("Error fetching or parsing calendar list:", error);
+        console.error("Error fetching calendar list:", error);
         throw error;
       }
     }),
@@ -277,24 +213,16 @@ export const calendarRouter = createTRPCRouter({
     )
     .output(ProcessedCalendarEventSchema)
     .query(async ({ ctx, input }) => {
-      const account = await getGoogleAccount(ctx.db, ctx.session.user.id);
-
-      if (!account.accessToken) throw new Error("No access token found");
-
-      const headers = createHeaders(account.accessToken);
-      const url = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(input.calendarId)}/events/${encodeURIComponent(input.eventId)}`;
-      const options = createRequestOptions(headers);
+      const client = await createGoogleCalendarClient(
+        ctx.db,
+        ctx.session.user.id
+      );
 
       try {
-        const response = await executeRequest(
-          url,
-          options,
-          account,
-          ctx.session.user.id
-        );
-
-        const item = await response.json();
-        return processEventData(item, input.calendarId);
+        const event = await client.calendars.events.retrieve(input.eventId, {
+          calendarId: input.calendarId,
+        });
+        return processEventData(event, input.calendarId);
       } catch (error) {
         console.error("Error fetching event:", error);
         throw error;
@@ -315,31 +243,23 @@ export const calendarRouter = createTRPCRouter({
     )
     .output(z.array(ProcessedCalendarEventSchema))
     .query(async ({ ctx, input }) => {
-      const account = await getGoogleAccount(ctx.db, ctx.session.user.id);
-
-      if (!account.accessToken) throw new Error("No access token found");
-
-      const headers = createHeaders(account.accessToken);
-      const options = createRequestOptions(headers);
+      const client = await createGoogleCalendarClient(
+        ctx.db,
+        ctx.session.user.id
+      );
 
       try {
-        const calListResponse = await executeRequest(
-          GOOGLE_CALENDAR_LIST_API_URL,
-          options,
-          account,
-          ctx.session.user.id
+        const calListResponse = await client.users.me.calendarList.list();
+
+        let calendarsToFetch = (calListResponse.items || []).map(
+          (item: any) => ({
+            id: item.id,
+            backgroundColor: item.backgroundColor,
+          })
         );
 
-        const calListData = await calListResponse.json();
-        const parsedCalList = CalendarListResponseSchema.parse(calListData);
-
-        let calendarsToFetch = parsedCalList.items.map((item) => ({
-          id: item.id,
-          backgroundColor: item.backgroundColor,
-        }));
-
         if (input?.calendarIds?.length) {
-          calendarsToFetch = calendarsToFetch.filter((c) =>
+          calendarsToFetch = calendarsToFetch.filter((c: any) =>
             input.calendarIds!.includes(c.id)
           );
         }
@@ -361,27 +281,17 @@ export const calendarRouter = createTRPCRouter({
         const timeMinDate = new Date(timeMinISO);
         const timeMaxDate = new Date(timeMaxISO);
 
-        const fetchPromises = calendarsToFetch.map(async (calendar) => {
-          const params = new URLSearchParams({
-            maxResults: input?.maxResults?.toString() ?? "2500",
-            orderBy: "startTime",
-            singleEvents: "true",
-            timeMax: timeMaxISO,
-            timeMin: timeMinISO,
-          });
-
-          const url = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendar.id)}/events?${params.toString()}`;
-
+        const fetchPromises = calendarsToFetch.map(async (calendar: any) => {
           try {
-            const response = await executeRequest(
-              url,
-              options,
-              account,
-              ctx.session.user.id
-            );
+            const response = await client.calendars.events.list(calendar.id, {
+              maxResults: input?.maxResults ?? 2500,
+              orderBy: "startTime",
+              singleEvents: true,
+              timeMax: timeMaxISO,
+              timeMin: timeMinISO,
+            });
 
-            const evData = await response.json();
-            const items = (evData.items ?? []) as GoogleEvent[];
+            const items = (response.items ?? []) as any[];
 
             const validEvents = items
               .filter((item) => {
@@ -437,13 +347,10 @@ export const calendarRouter = createTRPCRouter({
     )
     .output(z.array(TimeSlotSchema))
     .query(async ({ ctx, input }) => {
-      const account = await getGoogleAccount(ctx.db, ctx.session.user.id);
-      if (!account.accessToken) {
-        throw new Error("No access token found for Google Account.");
-      }
-
-      const headers = createHeaders(account.accessToken);
-      headers.append("Content-Type", "application/json");
+      const client = await createGoogleCalendarClient(
+        ctx.db,
+        ctx.session.user.id
+      );
 
       const requestBody = {
         items: input.calendarIds.map((id) => ({ id })),
@@ -452,20 +359,9 @@ export const calendarRouter = createTRPCRouter({
         timeZone: input.timeZone,
       };
 
-      const options = createRequestOptions(
-        headers,
-        "POST",
-        JSON.stringify(requestBody)
-      );
-
       try {
-        const response = await executeRequest(
-          GOOGLE_FREEBUSY_API_URL,
-          options,
-          account,
-          ctx.session.user.id
-        );
-        const freeBusyDataRaw = await response.json();
+        const freeBusyDataRaw =
+          await client.freeBusy.checkAvailability(requestBody);
         const freeBusyData =
           GoogleFreeBusyResponseSchema.parse(freeBusyDataRaw);
 
@@ -528,29 +424,19 @@ export const calendarRouter = createTRPCRouter({
     )
     .output(ProcessedCalendarEventSchema)
     .mutation(async ({ ctx, input }) => {
-      const account = await getGoogleAccount(ctx.db, ctx.session.user.id);
-
-      if (!account.accessToken) throw new Error("No access token found");
-
-      const headers = createHeaders(account.accessToken);
-      headers.append("Content-Type", "application/json");
-
-      // First fetch the current event to update
-      const getUrl = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(input.calendarId)}/events/${encodeURIComponent(input.eventId)}`;
-      const getOptions = createRequestOptions(headers);
+      const client = await createGoogleCalendarClient(
+        ctx.db,
+        ctx.session.user.id
+      );
 
       try {
-        // Get the current event
-        const getResponse = await executeRequest(
-          getUrl,
-          getOptions,
-          account,
-          ctx.session.user.id
+        const currentEvent = await client.calendars.events.retrieve(
+          input.eventId,
+          {
+            calendarId: input.calendarId,
+          }
         );
 
-        const currentEvent = await getResponse.json();
-
-        // Prepare event data using our helper function
         const eventData = prepareEventData(
           {
             allDay: input.event.allDay,
@@ -564,23 +450,15 @@ export const calendarRouter = createTRPCRouter({
           currentEvent
         );
 
-        // Update the event
-        const updateUrl = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(input.calendarId)}/events/${encodeURIComponent(input.eventId)}`;
-        const updateOptions = createRequestOptions(
-          headers,
-          "PUT",
-          JSON.stringify(eventData)
+        const updatedEvent = await client.calendars.events.update(
+          input.eventId,
+          {
+            calendarId: input.calendarId,
+            ...eventData,
+          }
         );
 
-        const updateResponse = await executeRequest(
-          updateUrl,
-          updateOptions,
-          account,
-          ctx.session.user.id
-        );
-
-        const item = await updateResponse.json();
-        return processEventData(item, input.calendarId);
+        return processEventData(updatedEvent, input.calendarId);
       } catch (error) {
         console.error("Error updating event:", error);
         throw error;

@@ -1,8 +1,8 @@
-# Google Calendar SDK TypeScript API Library
+# Google Calendar TypeScript API Library
 
 [![NPM version](https://img.shields.io/npm/v/google-calendar-sdk.svg)](https://npmjs.org/package/google-calendar-sdk) ![npm bundle size](https://img.shields.io/bundlephobia/minzip/google-calendar-sdk)
 
-This library provides convenient access to the Google Calendar SDK REST API from server-side TypeScript or JavaScript.
+This library provides convenient access to the Google Calendar REST API from server-side TypeScript or JavaScript.
 
 The full API of this library can be found in [api.md](api.md).
 

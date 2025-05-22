@@ -1,7 +1,7 @@
 // File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
 
 import { type GoogleCalendar } from "../../client";
-import { RequestOptions } from "../request-options";
+import { type RequestOptions } from "../request-options";
 import { hasOwn } from "./values";
 
 type LogFn = (message: string, ...rest: unknown[]) => void;

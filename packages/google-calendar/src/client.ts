@@ -1,5 +1,6 @@
 // File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
 
+import { type PrismaClient } from "@weekday/db";
 import { APIPromise } from "./core/api-promise";
 import * as Errors from "./core/error";
 import * as Uploads from "./core/uploads";
@@ -11,12 +12,16 @@ import type {
 import { type Fetch } from "./internal/builtin-types";
 import { getPlatformHeaders } from "./internal/detect-platform";
 import { castToError, isAbortError } from "./internal/errors";
-import { HeadersLike, NullableHeaders, buildHeaders } from "./internal/headers";
+import {
+  type HeadersLike,
+  type NullableHeaders,
+  buildHeaders,
+} from "./internal/headers";
 import type { APIResponseProps } from "./internal/parse";
 import * as Opts from "./internal/request-options";
 import {
-  FinalRequestOptions,
-  RequestOptions,
+  type FinalRequestOptions,
+  type RequestOptions,
 } from "./internal/request-options";
 import * as Shims from "./internal/shims";
 import type {
@@ -42,18 +47,18 @@ import {
   validatePositiveInteger,
 } from "./internal/utils/values";
 import {
-  Calendar,
-  CalendarCreateParams,
-  CalendarUpdateParams,
-  CalendarUpdatePartialParams,
+  type Calendar,
+  type CalendarCreateParams,
+  type CalendarUpdateParams,
+  type CalendarUpdatePartialParams,
   Calendars,
 } from "./resources/calendars/calendars";
-import { ChannelStopWatchingParams, Channels } from "./resources/channels";
-import { ColorListResponse, Colors } from "./resources/colors";
+import { type ChannelStopWatchingParams, Channels } from "./resources/channels";
+import { type ColorListResponse, Colors } from "./resources/colors";
 import {
   FreeBusy,
-  FreeBusyCheckAvailabilityParams,
-  FreeBusyCheckAvailabilityResponse,
+  type FreeBusyCheckAvailabilityParams,
+  type FreeBusyCheckAvailabilityResponse,
 } from "./resources/free-busy";
 import * as API from "./resources/index";
 import { Users } from "./resources/users/users";
@@ -134,7 +139,7 @@ export interface ClientOptions {
 }
 
 /**
- * API Client for interfacing with the Google Calendar SDK API.
+ * API Client for interfacing with the Google Calendar API.
  */
 export class GoogleCalendar {
   apiKey: string | null;
@@ -152,7 +157,7 @@ export class GoogleCalendar {
   private _options: ClientOptions;
 
   /**
-   * API Client for interfacing with the Google Calendar SDK API.
+   * API Client for interfacing with the Google Calendar API.
    *
    * @param {string | null | undefined} [opts.apiKey=process.env['GOOGLE_CALENDAR_SDK_API_KEY'] ?? null]
    * @param {string} [opts.baseURL=process.env['GOOGLE_CALENDAR_SDK_BASE_URL'] ?? https://www.googleapis.com//calendar/v3/] - Override the default base URL for the API.
@@ -874,4 +879,127 @@ export declare namespace GoogleCalendar {
     type FreeBusyCheckAvailabilityResponse as FreeBusyCheckAvailabilityResponse,
     type FreeBusyCheckAvailabilityParams as FreeBusyCheckAvailabilityParams,
   };
+}
+
+export class RefreshableGoogleCalendar extends GoogleCalendar {
+  private db: PrismaClient;
+  private userId: string;
+  private refreshTokenCallback?: (newAccessToken: string) => Promise<void>;
+
+  constructor(
+    options: ClientOptions & {
+      db: PrismaClient;
+      userId: string;
+      refreshTokenCallback?: (newAccessToken: string) => Promise<void>;
+    }
+  ) {
+    const { db, userId, refreshTokenCallback, ...clientOptions } = options;
+    super(clientOptions);
+    this.db = db;
+    this.userId = userId;
+    this.refreshTokenCallback = refreshTokenCallback;
+  }
+
+  private async refreshTokenIfNeeded(
+    response: Response
+  ): Promise<string | null> {
+    if (response.status !== 401) {
+      return this.apiKey;
+    }
+
+    const account = await this.getGoogleAccount();
+    if (!account.refreshToken) {
+      return this.apiKey;
+    }
+
+    console.log("Access token expired, refreshing via Better Auth...");
+
+    try {
+      const { authInstance } = await import("@weekday/auth");
+      const refreshedAccount = await authInstance.api.refreshToken({
+        body: {
+          accountId: account.id,
+          providerId: "google",
+          userId: this.userId,
+        },
+      });
+
+      if (!refreshedAccount?.accessToken) {
+        return this.apiKey;
+      }
+
+      this.apiKey = refreshedAccount.accessToken;
+
+      if (this.refreshTokenCallback) {
+        await this.refreshTokenCallback(refreshedAccount.accessToken);
+      }
+
+      return refreshedAccount.accessToken;
+    } catch (error) {
+      console.error("Failed to refresh token:", error);
+      return this.apiKey;
+    }
+  }
+
+  private async getGoogleAccount() {
+    const account = await this.db.account.findFirst({
+      select: {
+        id: true,
+        accessToken: true,
+        refreshToken: true,
+      },
+      where: {
+        providerId: "google",
+        userId: this.userId,
+      },
+    });
+
+    if (!account?.accessToken) {
+      throw new Error("No access token found");
+    }
+
+    return account;
+  }
+
+  override request<Rsp>(
+    options: PromiseOrValue<FinalRequestOptions>,
+    remainingRetries: number | null = null
+  ): APIPromise<Rsp> {
+    return new APIPromise(
+      this,
+      this.makeRequestWithRefresh(options, remainingRetries, undefined)
+    );
+  }
+
+  private async makeRequestWithRefresh(
+    optionsInput: PromiseOrValue<FinalRequestOptions>,
+    retriesRemaining: number | null,
+    retryOfRequestLogID: string | undefined
+  ): Promise<APIResponseProps> {
+    try {
+      return await (this as any).makeRequest(
+        optionsInput,
+        retriesRemaining,
+        retryOfRequestLogID
+      );
+    } catch (error: any) {
+      if (
+        error?.status === 401 &&
+        retriesRemaining !== null &&
+        retriesRemaining > 0
+      ) {
+        const mockResponse = new Response(null, { status: 401 });
+        const newAccessToken = await this.refreshTokenIfNeeded(mockResponse);
+
+        if (newAccessToken && newAccessToken !== this.apiKey) {
+          return await (this as any).makeRequest(
+            optionsInput,
+            retriesRemaining - 1,
+            retryOfRequestLogID
+          );
+        }
+      }
+      throw error;
+    }
+  }
 }

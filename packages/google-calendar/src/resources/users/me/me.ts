@@ -1,27 +1,29 @@
 // File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
 
-import { APIResource } from '../../../core/resource';
-import * as CalendarListAPI from './calendar-list';
+import { APIResource } from "../../../core/resource";
+import * as CalendarListAPI from "./calendar-list";
 import {
   CalendarList,
-  CalendarListCreateParams,
-  CalendarListEntry,
-  CalendarListListParams,
-  CalendarListListResponse,
-  CalendarListUpdateParams,
-  CalendarListWatchParams,
-} from './calendar-list';
-import * as SettingsAPI from './settings';
+  type CalendarListCreateParams,
+  type CalendarListEntry,
+  type CalendarListListParams,
+  type CalendarListListResponse,
+  type CalendarListUpdateParams,
+  type CalendarListWatchParams,
+} from "./calendar-list";
+import * as SettingsAPI from "./settings";
 import {
-  SettingListParams,
-  SettingListResponse,
-  SettingRetrieveResponse,
-  SettingWatchParams,
+  type SettingListParams,
+  type SettingListResponse,
+  type SettingRetrieveResponse,
+  type SettingWatchParams,
   Settings,
-} from './settings';
+} from "./settings";
 
 export class Me extends APIResource {
-  calendarList: CalendarListAPI.CalendarList = new CalendarListAPI.CalendarList(this._client);
+  calendarList: CalendarListAPI.CalendarList = new CalendarListAPI.CalendarList(
+    this._client
+  );
   settings: SettingsAPI.Settings = new SettingsAPI.Settings(this._client);
 }
 

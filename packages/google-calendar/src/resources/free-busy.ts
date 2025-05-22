@@ -1,8 +1,8 @@
 // File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
 
-import { APIResource } from '../core/resource';
-import { APIPromise } from '../core/api-promise';
-import { RequestOptions } from '../internal/request-options';
+import { APIPromise } from "../core/api-promise";
+import { APIResource } from "../core/resource";
+import { type RequestOptions } from "../internal/request-options";
 
 export class FreeBusy extends APIResource {
   /**
@@ -10,9 +10,9 @@ export class FreeBusy extends APIResource {
    */
   checkAvailability(
     body: FreeBusyCheckAvailabilityParams,
-    options?: RequestOptions,
+    options?: RequestOptions
   ): APIPromise<FreeBusyCheckAvailabilityResponse> {
-    return this._client.post('/freeBusy', { body, ...options });
+    return this._client.post("/freeBusy", { body, ...options });
   }
 }
 

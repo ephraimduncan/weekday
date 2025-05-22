@@ -1,26 +1,39 @@
 // File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
 
-import { APIResource } from '../../../core/resource';
-import * as ACLAPI from '../../calendars/acl';
-import { APIPromise } from '../../../core/api-promise';
-import { buildHeaders } from '../../../internal/headers';
-import { RequestOptions } from '../../../internal/request-options';
-import { path } from '../../../internal/utils/path';
+import { APIPromise } from "../../../core/api-promise";
+import { APIResource } from "../../../core/resource";
+import { buildHeaders } from "../../../internal/headers";
+import { type RequestOptions } from "../../../internal/request-options";
+import { path } from "../../../internal/utils/path";
+import * as ACLAPI from "../../calendars/acl";
 
 export class CalendarList extends APIResource {
   /**
    * Inserts an existing calendar into the user's calendar list.
    */
-  create(params: CalendarListCreateParams, options?: RequestOptions): APIPromise<CalendarListEntry> {
+  create(
+    params: CalendarListCreateParams,
+    options?: RequestOptions
+  ): APIPromise<CalendarListEntry> {
     const { colorRgbFormat, ...body } = params;
-    return this._client.post('/users/me/calendarList', { query: { colorRgbFormat }, body, ...options });
+    return this._client.post("/users/me/calendarList", {
+      query: { colorRgbFormat },
+      body,
+      ...options,
+    });
   }
 
   /**
    * Returns a calendar from the user's calendar list.
    */
-  retrieve(calendarID: string, options?: RequestOptions): APIPromise<CalendarListEntry> {
-    return this._client.get(path`/users/me/calendarList/${calendarID}`, options);
+  retrieve(
+    calendarID: string,
+    options?: RequestOptions
+  ): APIPromise<CalendarListEntry> {
+    return this._client.get(
+      path`/users/me/calendarList/${calendarID}`,
+      options
+    );
   }
 
   /**
@@ -29,7 +42,7 @@ export class CalendarList extends APIResource {
   update(
     calendarID: string,
     params: CalendarListUpdateParams,
-    options?: RequestOptions,
+    options?: RequestOptions
   ): APIPromise<CalendarListEntry> {
     const { colorRgbFormat, ...body } = params;
     return this._client.put(path`/users/me/calendarList/${calendarID}`, {
@@ -44,9 +57,9 @@ export class CalendarList extends APIResource {
    */
   list(
     query: CalendarListListParams | null | undefined = {},
-    options?: RequestOptions,
+    options?: RequestOptions
   ): APIPromise<CalendarListListResponse> {
-    return this._client.get('/users/me/calendarList', { query, ...options });
+    return this._client.get("/users/me/calendarList", { query, ...options });
   }
 
   /**
@@ -55,17 +68,35 @@ export class CalendarList extends APIResource {
   delete(calendarID: string, options?: RequestOptions): APIPromise<void> {
     return this._client.delete(path`/users/me/calendarList/${calendarID}`, {
       ...options,
-      headers: buildHeaders([{ Accept: '*/*' }, options?.headers]),
+      headers: buildHeaders([{ Accept: "*/*" }, options?.headers]),
     });
   }
 
   /**
    * Watch for changes to CalendarList resources.
    */
-  watch(params: CalendarListWatchParams, options?: RequestOptions): APIPromise<ACLAPI.Channel> {
-    const { maxResults, minAccessRole, pageToken, showDeleted, showHidden, syncToken, ...body } = params;
-    return this._client.post('/users/me/calendarList/watch', {
-      query: { maxResults, minAccessRole, pageToken, showDeleted, showHidden, syncToken },
+  watch(
+    params: CalendarListWatchParams,
+    options?: RequestOptions
+  ): APIPromise<ACLAPI.Channel> {
+    const {
+      maxResults,
+      minAccessRole,
+      pageToken,
+      showDeleted,
+      showHidden,
+      syncToken,
+      ...body
+    } = params;
+    return this._client.post("/users/me/calendarList/watch", {
+      query: {
+        maxResults,
+        minAccessRole,
+        pageToken,
+        showDeleted,
+        showHidden,
+        syncToken,
+      },
       body,
       ...options,
     });
