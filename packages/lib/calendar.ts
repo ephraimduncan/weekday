@@ -1,5 +1,6 @@
-import { type PrismaClient } from "@weekday/db";
+import { type DrizzleClient, account } from "@weekday/db";
 import { type Event as GoogleCalendarEvent } from "@weekday/google-calendar";
+import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 
 import { GOOGLE_CALENDAR_COLORS } from "./constants";
@@ -23,26 +24,25 @@ export type Account = {
 };
 
 export async function getGoogleAccount(
-  db: PrismaClient,
+  db: DrizzleClient,
   userId: string
 ): Promise<Account> {
-  const account = await db.account.findFirst({
-    select: {
-      id: true,
-      accessToken: true,
-      refreshToken: true,
-    },
-    where: {
-      providerId: "google",
-      userId: userId,
-    },
-  });
+  const accountRecord = await db
+    .select({
+      id: account.id,
+      accessToken: account.accessToken,
+      refreshToken: account.refreshToken,
+    })
+    .from(account)
+    .where(and(eq(account.providerId, "google"), eq(account.userId, userId)))
+    .limit(1)
+    .then((results) => results[0]);
 
-  if (!account?.accessToken) {
+  if (!accountRecord?.accessToken) {
     throw new Error("No access token found");
   }
 
-  return account;
+  return accountRecord;
 }
 
 export function processEventData(
@@ -65,7 +65,7 @@ export function processEventData(
     );
   }
 
-  let eventColor = undefined;
+  let eventColor: string | undefined = undefined;
   if (eventItem.colorId && GOOGLE_CALENDAR_COLORS[eventItem.colorId]) {
     eventColor = GOOGLE_CALENDAR_COLORS[eventItem.colorId]?.color;
   }

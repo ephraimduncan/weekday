@@ -1,20 +1,7 @@
-import { PrismaClient } from "@prisma/client";
-
 import { env } from "@weekday/env";
+import { drizzle } from "drizzle-orm/node-postgres";
+import * as schema from "./drizzle/schema";
 
-const createPrismaClient = () =>
-  new PrismaClient({
-    log:
-      env.NODE_ENV === "development" ? ["query", "error", "warn"] : ["error"],
-  });
-
-const globalForPrisma = globalThis as unknown as {
-  prisma: ReturnType<typeof createPrismaClient> | undefined;
-};
-
-export const db = globalForPrisma.prisma ?? createPrismaClient();
-export { type PrismaClient };
-
-if (env.NODE_ENV !== "production") {
-  globalForPrisma.prisma = db;
-}
+export const db = drizzle(env.DATABASE_URL, { schema });
+export type DrizzleClient = typeof db;
+export * from "./drizzle/schema";

@@ -1,7 +1,7 @@
 import { cache } from "react";
 
 import { betterAuth as betterAuthClient } from "better-auth";
-import { prismaAdapter } from "better-auth/adapters/prisma";
+import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import {
   toNextJsHandler as betterAuthToNextJsHandler,
   nextCookies,
@@ -12,8 +12,8 @@ import { db } from "@weekday/db";
 import { env } from "@weekday/env";
 
 const betterAuth = betterAuthClient({
-  database: prismaAdapter(db, {
-    provider: "postgresql",
+  database: drizzleAdapter(db, {
+    provider: "pg",
   }),
   databaseHooks: {
     account: {

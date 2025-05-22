@@ -4,22 +4,21 @@
   "main": "./index.ts",
   "types": "./index.ts",
   "scripts": {
-    "prebuild": "bun with:env prisma generate --no-engine",
-    "postinstall": "bun with:env prisma generate",
-    "generate": "bun with:env prisma generate",
-    "migrate": "bun with:env prisma migrate dev",
-    "deploy": "bun with:env prisma migrate deploy",
-    "reset": "bun with:env prisma migrate reset",
-    "push": "bun with:env prisma db push",
-    "studio": "bun with:env prisma studio",
+    "prebuild": "bun run with:env drizzle-kit generate",
+    "generate": "bun run with:env drizzle-kit generate",
+    "migrate": "bun run with:env drizzle-kit migrate",
+    "push": "bun run with:env drizzle-kit push",
+    "studio": "bun run with:env drizzle-kit studio",
     "with:env": "dotenv -e ../../.env --"
   },
   "dependencies": {
-    "@prisma/client": "^6.5.0",
-    "@weekday/env": "*"
+    "@weekday/env": "*",
+    "drizzle-orm": "^0.43.1",
+    "pg": "^8.16.0"
   },
   "devDependencies": {
-    "prisma": "^6.5.0",
+    "@types/pg": "^8.15.2",
+    "drizzle-kit": "^0.31.1",
     "typescript": "^5.8.2"
   }
 }

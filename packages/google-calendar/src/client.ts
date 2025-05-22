@@ -1,6 +1,6 @@
 // File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
 
-import { type PrismaClient } from "@weekday/db";
+import { type DrizzleClient } from "@weekday/db";
 import { APIPromise } from "./core/api-promise";
 import * as Errors from "./core/error";
 import * as Uploads from "./core/uploads";
@@ -882,13 +882,13 @@ export declare namespace GoogleCalendar {
 }
 
 export class RefreshableGoogleCalendar extends GoogleCalendar {
-  private db: PrismaClient;
+  private db: DrizzleClient;
   private userId: string;
   private refreshTokenCallback?: (newAccessToken: string) => Promise<void>;
 
   constructor(
     options: ClientOptions & {
-      db: PrismaClient;
+      db: DrizzleClient;
       userId: string;
       refreshTokenCallback?: (newAccessToken: string) => Promise<void>;
     }
@@ -942,23 +942,21 @@ export class RefreshableGoogleCalendar extends GoogleCalendar {
   }
 
   private async getGoogleAccount() {
-    const account = await this.db.account.findFirst({
-      select: {
+    const accountRecord = await this.db.query.account.findFirst({
+      where: (account, { eq, and }) =>
+        and(eq(account.providerId, "google"), eq(account.userId, this.userId)),
+      columns: {
         id: true,
         accessToken: true,
         refreshToken: true,
       },
-      where: {
-        providerId: "google",
-        userId: this.userId,
-      },
     });
 
-    if (!account?.accessToken) {
+    if (!accountRecord?.accessToken) {
       throw new Error("No access token found");
     }
 
-    return account;
+    return accountRecord;
   }
 
   override request<Rsp>(
