@@ -8,6 +8,7 @@
   },
   "dependencies": {
     "@weekday/auth": "*",
+    "@weekday/google-calendar": "*",
     "@weekday/db": "*",
     "@weekday/lib": "*",
     "@trpc/server": "^11.0.0",

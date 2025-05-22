@@ -101,6 +101,7 @@
         "@trpc/server": "^11.0.0",
         "@weekday/auth": "*",
         "@weekday/db": "*",
+        "@weekday/google-calendar": "*",
         "@weekday/lib": "*",
         "superjson": "^2.2.1",
         "uuid": "^11.1.0",
@@ -144,6 +145,14 @@
         "@t3-oss/env-nextjs": "^0.12.0",
         "zod": "^3.24.2",
       },
+      "devDependencies": {
+        "eslint": "^9.23.0",
+        "typescript": "^5.8.2",
+      },
+    },
+    "packages/google-calendar": {
+      "name": "@weekday/google-calendar",
+      "version": "0.0.0",
       "devDependencies": {
         "eslint": "^9.23.0",
         "typescript": "^5.8.2",
@@ -700,6 +709,8 @@
     "@weekday/db": ["@weekday/db@workspace:packages/db"],
 
     "@weekday/env": ["@weekday/env@workspace:packages/env"],
+
+    "@weekday/google-calendar": ["@weekday/google-calendar@workspace:packages/google-calendar"],
 
     "@weekday/lib": ["@weekday/lib@workspace:packages/lib"],
 
