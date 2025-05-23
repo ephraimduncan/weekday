@@ -12,6 +12,10 @@ const config = {
         hostname: "lh3.googleusercontent.com",
         protocol: "https",
       },
+      {
+        hostname: "ik.imagekit.io",
+        protocol: "https",
+      },
     ],
   },
   reactStrictMode: true,
