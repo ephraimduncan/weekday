@@ -907,15 +907,20 @@ export class RefreshableGoogleCalendar extends GoogleCalendar {
       return this.apiKey;
     }
 
-    const account = await this.getGoogleAccount();
-    if (!account.refreshToken) {
-      return this.apiKey;
-    }
-
-    console.log("Access token expired, refreshing via Better Auth...");
-
     try {
+      const account = await this.getGoogleAccount();
+      if (!account.refreshToken) {
+        console.log("No refresh token available for account:", account.id);
+        return this.apiKey;
+      }
+
+      console.log(
+        "Access token expired, refreshing via Better Auth for account:",
+        account.id
+      );
+
       const { authInstance } = await import("@weekday/auth");
+
       const refreshedAccount = await authInstance.api.refreshToken({
         body: {
           accountId: account.id,
@@ -925,9 +930,16 @@ export class RefreshableGoogleCalendar extends GoogleCalendar {
       });
 
       if (!refreshedAccount?.accessToken) {
+        console.error("No access token in refresh response:", refreshedAccount);
         return this.apiKey;
       }
 
+      console.log(
+        "Token refreshed successfully, new token length:",
+        refreshedAccount.accessToken.length
+      );
+
+      // Update the instance's API key
       this.apiKey = refreshedAccount.accessToken;
 
       if (this.refreshTokenCallback) {
@@ -963,9 +975,12 @@ export class RefreshableGoogleCalendar extends GoogleCalendar {
     options: PromiseOrValue<FinalRequestOptions>,
     remainingRetries: number | null = null
   ): APIPromise<Rsp> {
+    // Set default retries to 2 if not provided to allow for token refresh
+    const retries = remainingRetries ?? this.maxRetries ?? 2;
+
     return new APIPromise(
       this,
-      this.makeRequestWithRefresh(options, remainingRetries, undefined)
+      this.makeRequestWithRefresh(options, retries, undefined)
     );
   }
 
@@ -986,14 +1001,27 @@ export class RefreshableGoogleCalendar extends GoogleCalendar {
         retriesRemaining !== null &&
         retriesRemaining > 0
       ) {
+        console.log(
+          "Received 401 error, attempting token refresh. Retries remaining:",
+          retriesRemaining
+        );
+
         const mockResponse = new Response(null, { status: 401 });
+        const originalToken = this.apiKey;
         const newAccessToken = await this.refreshTokenIfNeeded(mockResponse);
 
-        if (newAccessToken && newAccessToken !== this.apiKey) {
+        if (newAccessToken && newAccessToken !== originalToken) {
+          console.log("Token was refreshed, retrying request");
+          // Token was refreshed successfully, retry the request
+          // The authHeaders method will automatically use the updated this.apiKey
           return await (this as any).makeRequest(
             optionsInput,
             retriesRemaining - 1,
             retryOfRequestLogID
+          );
+        } else {
+          console.log(
+            "Token refresh failed or returned same token, not retrying"
           );
         }
       }
