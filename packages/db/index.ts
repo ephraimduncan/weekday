@@ -5,3 +5,4 @@ import * as schema from "./drizzle/schema";
 export const db = drizzle(env.DATABASE_URL, { schema });
 export type DrizzleClient = typeof db;
 export * from "./drizzle/schema";
+export { schema };

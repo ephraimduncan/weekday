@@ -8,12 +8,13 @@ import {
 } from "better-auth/next-js";
 import { headers } from "next/headers";
 
-import { db } from "@weekday/db";
+import { db, schema } from "@weekday/db";
 import { env } from "@weekday/env";
 
 const betterAuth = betterAuthClient({
   database: drizzleAdapter(db, {
     provider: "pg",
+    schema: schema,
   }),
   databaseHooks: {
     account: {
