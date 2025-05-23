@@ -24,10 +24,7 @@ export const HeroSection = () => {
                 </p>
 
                 <div className="mt-12 flex items-center gap-2">
-                  <div
-                    key={1}
-                    className="bg-foreground/10 rounded-[calc(var(--radius-xl)+0.125rem)] border p-0.5"
-                  >
+                  <div className="bg-foreground/10 rounded-[calc(var(--radius-xl)+0.125rem)] border p-0.5">
                     <Button
                       asChild
                       size="lg"
@@ -39,7 +36,6 @@ export const HeroSection = () => {
                     </Button>
                   </div>
                   <Button
-                    key={2}
                     asChild
                     size="lg"
                     variant="ghost"

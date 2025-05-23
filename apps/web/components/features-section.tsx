@@ -42,8 +42,13 @@ export const FeaturesSection = () => {
               key={item.name}
               className="col-span-full sm:col-span-2 lg:col-span-1"
             >
-              <div className="shadow-primary/30 ring-border w-fit rounded-lg p-2 shadow-md ring-1">
-                <item.icon className="text-primary size-6" aria-hidden="true" />
+              <div className="bg-foreground/10 w-fit rounded-[calc(var(--radius-lg)+0.125rem)] border p-px">
+                <div className="bg-background ring-border w-fit rounded-lg p-2">
+                  <item.icon
+                    className="text-primary size-6"
+                    aria-hidden="true"
+                  />
+                </div>
               </div>
               <dt className="text-foreground mt-6 font-semibold">
                 {item.name}
