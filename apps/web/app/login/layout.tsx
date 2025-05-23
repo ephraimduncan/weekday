@@ -7,7 +7,7 @@ export default async function Layout({ children }: { children: ReactNode }) {
   const session = await auth();
 
   if (session) {
-    redirect("/");
+    redirect("/calendar");
   }
 
   return <>{children}</>;
