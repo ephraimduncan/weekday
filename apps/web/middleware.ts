@@ -1,12 +1,19 @@
-import { authInstance } from "@weekday/auth";
-import { headers } from "next/headers";
+import type { Session } from "@weekday/auth";
+
+import { betterFetch } from "@better-fetch/fetch";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  const session = await authInstance.api.getSession({
-    headers: await headers(),
-  });
+  const { data: session } = await betterFetch<Session>(
+    "/api/auth/get-session",
+    {
+      baseURL: request.nextUrl.origin,
+      headers: {
+        cookie: request.headers.get("cookie") || "",
+      },
+    },
+  );
 
   if (pathname.startsWith("/login") && session) {
     return NextResponse.redirect(new URL("/calendar", request.url));
@@ -21,5 +28,4 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: ["/calendar/:path*", "/login"],
-  runtime: "nodejs",
 };
