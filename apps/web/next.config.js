@@ -6,6 +6,14 @@ const config = {
     reactRemoveProperties: process.env.NODE_ENV === "production",
     removeConsole: process.env.NODE_ENV === "production",
   },
+  // experimental: {
+  //   optimizeCss: true,
+  //   optimizePackageImports: ["@radix-ui/react-select"],
+  //   scrollRestoration: true,
+  // },
+  experimental: {
+    nodeMiddleware: true,
+  },
   images: {
     remotePatterns: [
       {
@@ -19,11 +27,6 @@ const config = {
     ],
   },
   reactStrictMode: true,
-  // experimental: {
-  //   optimizeCss: true,
-  //   optimizePackageImports: ["@radix-ui/react-select"],
-  //   scrollRestoration: true,
-  // },
   transpilePackages: [
     "@weekday/api",
     "@weekday/db",

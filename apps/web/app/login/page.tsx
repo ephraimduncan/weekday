@@ -38,7 +38,12 @@ export default function Login() {
             <Button
               variant="outline"
               className="mt-2 flex-1 items-center justify-center space-x-2 border-neutral-300 bg-white py-2 text-neutral-900 hover:bg-neutral-100 sm:mt-0 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-50 dark:hover:bg-neutral-700"
-              onClick={() => signIn.social({ provider: "google" })}
+              onClick={() =>
+                signIn.social({
+                  callbackURL: "/calendar",
+                  provider: "google",
+                })
+              }
             >
               <GoogleIcon className="size-4" aria-hidden={true} />
               <span className="text-sm font-medium">Login with Google</span>
