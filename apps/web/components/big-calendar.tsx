@@ -40,14 +40,15 @@ export function BigCalendar() {
     };
   }, [currentDate]);
 
-  const { data: events, isLoading } = api.calendar.getEvents.useQuery(
+  const { data: events } = api.calendar.getEvents.useQuery(
     {
       timeMax,
       timeMin,
     },
     {
-      staleTime: 60 * 1000, // Consider data fresh for 1 minute
-      placeholderData: (prev) => prev, // Show previous data while fetching
+      gcTime: 1000 * 60 * 60 * 24,
+      staleTime: Infinity,
+      placeholderData: (prev) => prev,
     },
   );
 

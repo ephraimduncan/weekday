@@ -57,3 +57,4 @@ export const auth = cache(async () => {
 });
 
 export type Session = typeof betterAuth.$Infer.Session;
+export type User = typeof betterAuth.$Infer.Session.user;

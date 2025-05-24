@@ -2,7 +2,8 @@
 
 import React from "react";
 
-import { useSession } from "@weekday/auth/auth-client";
+import type { User } from "@weekday/auth";
+
 import { Menu, X } from "lucide-react";
 import { useScroll } from "motion/react";
 import Link from "next/link";
@@ -12,13 +13,11 @@ import { cn } from "@/lib/utils";
 
 import { Logo } from "./logo";
 
-export const Header = () => {
+export const Header = ({ user }: { user: User }) => {
   const [menuState, setMenuState] = React.useState(false);
   const [scrolled, setScrolled] = React.useState(false);
 
   const { scrollYProgress } = useScroll();
-  const { data } = useSession();
-  const user = data?.user;
 
   React.useEffect(() => {
     const unsubscribe = scrollYProgress.on("change", (latest) => {

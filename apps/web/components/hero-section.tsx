@@ -1,3 +1,4 @@
+import { auth } from "@weekday/auth";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -5,10 +6,13 @@ import { Button } from "@/components/ui/button";
 
 import { Header } from "./header";
 
-export const HeroSection = () => {
+export const HeroSection = async () => {
+  const session = await auth();
+  const user = session?.user;
+
   return (
     <>
-      <Header />
+      <Header user={user} />
       <main className="overflow-hidden">
         <section>
           <div className="relative pt-20">
