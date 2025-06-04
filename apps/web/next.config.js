@@ -33,6 +33,15 @@ const config = {
     "@weekday/env",
     "@weekday/auth",
   ],
+  async redirects() {
+    return [
+      {
+        destination: "/login",
+        permanent: true,
+        source: "/signup",
+      },
+    ];
+  },
 };
 
 export default config;

@@ -8,7 +8,10 @@ export async function middleware(request: NextRequest) {
     headers: await headers(),
   });
 
-  if (pathname.startsWith("/login") && session) {
+  const authRoutes = ["/login", "/signup"];
+  if (authRoutes.includes(pathname) && session) {
+    console.log("Redirecting to calendar");
+
     return NextResponse.redirect(new URL("/calendar", request.url));
   }
 
@@ -20,6 +23,6 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/calendar/:path*", "/login"],
+  matcher: ["/calendar/:path*", "/login", "/signup"],
   runtime: "nodejs",
 };
