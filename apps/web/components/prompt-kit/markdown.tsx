@@ -16,6 +16,38 @@ export type MarkdownProps = {
   components?: Partial<Components>;
 };
 
+// SECURITY: Sanitize markdown content to prevent XSS and data exfiltration
+function sanitizeMarkdown(content: string): string {
+  // Remove potentially dangerous image tags that could be used for data exfiltration
+  const imagePattern = /!\[([^\]]*)\]\(([^)]+)\)/g;
+  let sanitized = content.replace(imagePattern, (match, altText, url) => {
+    // Only allow safe image sources
+    const safeImageSources = [
+      /^data:image\//,
+      /^https:\/\/images\.unsplash\.com/,
+      /^https:\/\/via\.placeholder\.com/,
+      // Add other trusted image domains as needed
+    ];
+    
+    const isSafeUrl = safeImageSources.some(pattern => pattern.test(url));
+    
+    if (isSafeUrl) {
+      return match; // Keep safe images
+    } else {
+      return `[Image removed for security: ${altText || 'untitled'}]`;
+    }
+  });
+  
+  // Remove potentially dangerous HTML/script tags if they somehow get through
+  sanitized = sanitized.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '[Script removed for security]');
+  sanitized = sanitized.replace(/<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi, '[Iframe removed for security]');
+  
+  // Remove data: URLs that could be used for exfiltration (except safe image data URLs)
+  sanitized = sanitized.replace(/\[([^\]]*)\]\(data:(?!image\/)[^)]+\)/g, '[Link removed for security: $1]');
+  
+  return sanitized;
+}
+
 function parseMarkdownIntoBlocks(markdown: string): string[] {
   const tokens = marked.lexer(markdown);
   return tokens.map((token) => token.raw);
@@ -58,6 +90,31 @@ const INITIAL_COMPONENTS: Partial<Components> = {
   pre: function PreComponent({ children }) {
     return <>{children}</>;
   },
+  // SECURITY: Override link component to add security attributes
+  a: function LinkComponent({ href, children, ...props }) {
+    return (
+      <a
+        href={href}
+        target="_blank"
+        rel="noopener noreferrer nofollow"
+        {...props}
+      >
+        {children}
+      </a>
+    );
+  },
+  // SECURITY: Override image component to add security attributes
+  img: function ImageComponent({ src, alt, ...props }) {
+    return (
+      <img
+        src={src}
+        alt={alt}
+        referrerPolicy="no-referrer"
+        loading="lazy"
+        {...props}
+      />
+    );
+  },
 };
 
 const MemoizedMarkdownBlock = memo(
@@ -92,7 +149,10 @@ function MarkdownComponent({
 }: MarkdownProps) {
   const generatedId = useId();
   const blockId = id ?? generatedId;
-  const blocks = useMemo(() => parseMarkdownIntoBlocks(children), [children]);
+  
+  // SECURITY: Sanitize content before processing
+  const sanitizedChildren = sanitizeMarkdown(children);
+  const blocks = useMemo(() => parseMarkdownIntoBlocks(sanitizedChildren), [sanitizedChildren]);
 
   return (
     <div className={className}>
