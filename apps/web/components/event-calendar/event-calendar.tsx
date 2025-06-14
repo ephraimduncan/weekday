@@ -54,7 +54,6 @@ import { useCalendarContext } from "./calendar-context";
 export interface EventCalendarProps {
   className?: string;
   events?: CalendarEvent[];
-  initialView?: CalendarView;
   isCreatingEvent?: boolean;
   isDeletingEvent?: boolean;
   isUpdatingEvent?: boolean;
@@ -66,7 +65,6 @@ export interface EventCalendarProps {
 export function EventCalendar({
   className,
   events = [],
-  initialView = "week",
   isCreatingEvent = false,
   isDeletingEvent = false,
   isUpdatingEvent = false,
@@ -84,12 +82,6 @@ export function EventCalendar({
   const { open } = useSidebar();
 
   const memoizedEvents = useMemo(() => events, [events]);
-
-  useEffect(() => {
-    if (initialView && initialView !== view) {
-      setCalendarViewConfig({ view: initialView });
-    }
-  }, [initialView, view, setCalendarViewConfig]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {

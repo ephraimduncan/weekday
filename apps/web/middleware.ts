@@ -14,12 +14,8 @@ export async function middleware(request: NextRequest) {
     },
   );
 
-  console.log(session);
-
   const authRoutes = ["/login", "/signup"];
   if (authRoutes.includes(pathname) && session) {
-    console.log("Redirecting to calendar");
-
     return NextResponse.redirect(new URL("/calendar", request.url));
   }
 
