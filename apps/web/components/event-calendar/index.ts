@@ -1,7 +1,12 @@
 "use client";
 
 // Type exports
-export type { CalendarEvent, CalendarView, EventColor } from "./types";
+export type {
+  CalendarEvent,
+  CalendarView,
+  EventColor,
+  RecurrenceType,
+} from "./types";
 // Component exports
 export { CalendarDndProvider, useCalendarDnd } from "./calendar-dnd-context";
 // Constants and utility exports

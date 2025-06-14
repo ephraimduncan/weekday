@@ -60,7 +60,10 @@ export interface EventCalendarProps {
   onEventAdd?: (event: CalendarEvent) => void;
   onEventDelete?: (eventId: string) => void;
   onEventUpdate?: (event: CalendarEvent) => void;
-  onResponseUpdate?: (eventId: string, response: "accepted" | "declined" | "tentative") => void;
+  onResponseUpdate?: (
+    eventId: string,
+    response: "accepted" | "declined" | "tentative",
+  ) => void;
 }
 
 export function EventCalendar({
@@ -444,8 +447,8 @@ export function EventCalendar({
         <EventDialog
           onClose={handleCloseEventDialog}
           onDelete={handleEventDelete}
-          onSave={handleEventSave}
           onResponseUpdate={onResponseUpdate}
+          onSave={handleEventSave}
           event={selectedEvent}
           isOpen={isEventDialogOpen}
         />

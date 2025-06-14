@@ -33,6 +33,7 @@ export interface CalendarEvent {
     email?: string;
     self?: boolean;
   };
+  recurrence?: RecurrenceType;
 }
 
 export type CalendarView = "agenda" | "day" | "month" | "week";
@@ -59,4 +60,5 @@ export interface EventPermissions {
   userRole: UserEventRole;
 }
 
+export type RecurrenceType = "daily" | "monthly" | "none" | "weekly" | "yearly";
 export type UserEventRole = "attendee" | "none" | "organizer";

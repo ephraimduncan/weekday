@@ -2,7 +2,11 @@
 
 import { useEffect, useState } from "react";
 
-import type { CalendarEvent, EventColor } from "@/components/event-calendar";
+import type {
+  CalendarEvent,
+  EventColor,
+  RecurrenceType,
+} from "@/components/event-calendar";
 
 import { RiCalendarLine, RiDeleteBinLine } from "@remixicon/react";
 import { format, isBefore } from "date-fns";
@@ -229,6 +233,7 @@ export function EventDialog({
     endDate: new Date(),
     endTime: `${DefaultEndHour}:00`,
     location: "",
+    recurrence: "none" as RecurrenceType,
     startDate: new Date(),
     startTime: `${DefaultStartHour}:00`,
     title: "",
@@ -251,6 +256,7 @@ export function EventDialog({
         endDate: end,
         endTime: formatTimeForInput(end),
         location: event.location || "",
+        recurrence: event.recurrence || "none",
         startDate: start,
         startTime: formatTimeForInput(start),
         title: event.title || "",
@@ -269,6 +275,7 @@ export function EventDialog({
       endDate: new Date(),
       endTime: `${DefaultEndHour}:00`,
       location: "",
+      recurrence: "none" as RecurrenceType,
       startDate: new Date(),
       startTime: `${DefaultStartHour}:00`,
       title: "",
@@ -327,6 +334,7 @@ export function EventDialog({
       description: formState.description,
       end,
       location: formState.location,
+      recurrence: formState.recurrence,
       start,
       title: eventTitle,
     });
@@ -602,6 +610,27 @@ export function EventDialog({
               }
             />
             <Label htmlFor="all-day">All day</Label>
+          </div>
+
+          <div className="*:not-first:mt-1.5">
+            <Label htmlFor="recurrence">Repeat</Label>
+            <Select
+              value={formState.recurrence}
+              onValueChange={(value: RecurrenceType) =>
+                updateFormField("recurrence", value)
+              }
+            >
+              <SelectTrigger id="recurrence">
+                <SelectValue placeholder="Does not repeat" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">Does not repeat</SelectItem>
+                <SelectItem value="daily">Every day</SelectItem>
+                <SelectItem value="weekly">Every week</SelectItem>
+                <SelectItem value="monthly">Every month</SelectItem>
+                <SelectItem value="yearly">Every year</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="*:not-first:mt-1.5">
