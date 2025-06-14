@@ -83,10 +83,8 @@ export function EventCalendar({
   );
   const { open } = useSidebar();
 
-  // Memoize the events array to prevent unnecessary re-renders
   const memoizedEvents = useMemo(() => events, [events]);
 
-  // Set initial view if it's different from persisted view
   useEffect(() => {
     if (initialView && initialView !== view) {
       setCalendarViewConfig({ view: initialView });
@@ -264,9 +262,12 @@ export function EventCalendar({
     setSelectedEvent(null);
   }, []);
 
-  const handleSetView = useCallback((newView: CalendarView) => {
-    setCalendarViewConfig({ view: newView });
-  }, [setCalendarViewConfig]);
+  const handleSetView = useCallback(
+    (newView: CalendarView) => {
+      setCalendarViewConfig({ view: newView });
+    },
+    [setCalendarViewConfig],
+  );
 
   const viewTitle = useMemo(() => {
     if (view === "month") {
