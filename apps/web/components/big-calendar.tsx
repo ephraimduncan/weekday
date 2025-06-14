@@ -302,6 +302,29 @@ export function BigCalendar() {
       },
     });
 
+  // New mutation for attendee responses
+  const { mutate: updateAttendeeResponse } =
+    api.calendar.updateAttendeeResponse.useMutation({
+      onError: (err) => {
+        console.error("Error updating attendee response:", err);
+      },
+      onSuccess: (data) => {
+        // Optimistically update the local event data
+        const queryKey = { timeMax, timeMin };
+        utils.calendar.getEvents.setData(
+          queryKey,
+          (oldEvents) =>
+            oldEvents?.map((event) =>
+              event.id === data.id ? data : event,
+            ) as GetEventsQueryOutput,
+        );
+      },
+      onSettled: () => {
+        // Invalidate queries to ensure fresh data
+        utils.calendar.getEvents.invalidate({ timeMax, timeMin });
+      },
+    });
+
   const handleEventAdd = (event: CalendarEvent) => {
     if (!event.title || !event.start || !event.end) {
       console.error("Event title, start, and end are required.");
@@ -365,11 +388,24 @@ export function BigCalendar() {
     });
   };
 
+  const handleAttendeeResponse = (eventId: string, response: "accepted" | "declined" | "tentative") => {
+    // Find the event to get its calendar ID
+    const event = visibleEvents?.find(e => e.id === eventId);
+    const calendarId = event?.calendarId || "primary";
+    
+    updateAttendeeResponse({
+      calendarId,
+      eventId,
+      responseStatus: response,
+    });
+  };
+
   return (
     <EventCalendar
       onEventAdd={handleEventAdd}
       onEventDelete={handleEventDelete}
       onEventUpdate={handleEventUpdate}
+      onResponseUpdate={handleAttendeeResponse}
       events={visibleEvents}
       isCreatingEvent={isCreatingEvent}
       isDeletingEvent={isDeletingEvent}

@@ -60,6 +60,7 @@ export interface EventCalendarProps {
   onEventAdd?: (event: CalendarEvent) => void;
   onEventDelete?: (eventId: string) => void;
   onEventUpdate?: (event: CalendarEvent) => void;
+  onResponseUpdate?: (eventId: string, response: "accepted" | "declined" | "tentative") => void;
 }
 
 export function EventCalendar({
@@ -71,6 +72,7 @@ export function EventCalendar({
   onEventAdd,
   onEventDelete,
   onEventUpdate,
+  onResponseUpdate,
 }: EventCalendarProps) {
   const { currentDate, setCurrentDate } = useCalendarContext();
   const [calendarViewConfig, setCalendarViewConfig] = useCalendarView();
@@ -443,6 +445,7 @@ export function EventCalendar({
           onClose={handleCloseEventDialog}
           onDelete={handleEventDelete}
           onSave={handleEventSave}
+          onResponseUpdate={onResponseUpdate}
           event={selectedEvent}
           isOpen={isEventDialogOpen}
         />

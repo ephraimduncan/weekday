@@ -29,6 +29,38 @@ async function createGoogleCalendarClient(db: any, userId: string) {
   });
 }
 
+// Helper function to validate event permissions
+async function validateEventPermissions(
+  client: RefreshableGoogleCalendar, 
+  eventId: string, 
+  calendarId: string, 
+  requiredAction: "edit" | "delete"
+): Promise<void> {
+  try {
+    const event = await client.calendars.events.retrieve(eventId, {
+      calendarId: calendarId,
+    });
+
+    const processedEvent = processEventData(event, calendarId);
+    
+    // Check if user is organizer or creator
+    const isOrganizer = processedEvent.organizer?.self === true;
+    const isCreator = processedEvent.creator?.self === true;
+    
+    // Check if user is in attendees list (for potential future permissions)
+    const isAttendee = processedEvent.attendees?.some(attendee => attendee.self === true);
+
+    if (!isOrganizer && !isCreator) {
+      throw new Error(`You don't have permission to ${requiredAction} this event. Only the organizer or creator can ${requiredAction} events.`);
+    }
+  } catch (error) {
+    if (error instanceof Error && error.message.includes("don't have permission")) {
+      throw error;
+    }
+    throw new Error(`Failed to validate event permissions: ${error}`);
+  }
+}
+
 export const calendarRouter = createTRPCRouter({
   createEvent: protectedProcedure
     .input(
@@ -142,6 +174,14 @@ export const calendarRouter = createTRPCRouter({
       } catch (error) {
         console.error("Error fetching event before deletion:", error);
         throw new Error("Event not found, cannot delete.");
+      }
+
+      // Validate permissions before deletion
+      try {
+        await validateEventPermissions(client, input.eventId, input.calendarId, "delete");
+      } catch (error) {
+        console.error("Permission validation failed:", error);
+        throw error;
       }
 
       try {
@@ -429,6 +469,14 @@ export const calendarRouter = createTRPCRouter({
         ctx.session.user.id
       );
 
+      // Validate permissions before update
+      try {
+        await validateEventPermissions(client, input.eventId, input.calendarId, "edit");
+      } catch (error) {
+        console.error("Permission validation failed:", error);
+        throw error;
+      }
+
       try {
         const currentEvent = await client.calendars.events.retrieve(
           input.eventId,
@@ -461,6 +509,63 @@ export const calendarRouter = createTRPCRouter({
         return processEventData(updatedEvent, input.calendarId);
       } catch (error) {
         console.error("Error updating event:", error);
+        throw error;
+      }
+    }),
+
+  // New mutation to handle attendee responses
+  updateAttendeeResponse: protectedProcedure
+    .input(
+      z.object({
+        calendarId: z.string(),
+        eventId: z.string(),
+        responseStatus: z.enum(["accepted", "declined", "tentative", "needsAction"]),
+      })
+    )
+    .output(ProcessedCalendarEventSchema)
+    .mutation(async ({ ctx, input }) => {
+      const client = await createGoogleCalendarClient(
+        ctx.db,
+        ctx.session.user.id
+      );
+
+      try {
+        // Get the current event to check if user is an attendee
+        const currentEvent = await client.calendars.events.retrieve(
+          input.eventId,
+          {
+            calendarId: input.calendarId,
+          }
+        );
+
+        const processedEvent = processEventData(currentEvent, input.calendarId);
+        
+        // Check if user is in attendees list
+        const userAttendee = processedEvent.attendees?.find(attendee => attendee.self === true);
+        if (!userAttendee) {
+          throw new Error("You are not an attendee of this event and cannot respond to it.");
+        }
+
+        // Update the attendee's response status
+        const updatedAttendees = (currentEvent as any).attendees?.map((attendee: any) => {
+          if (attendee.self === true) {
+            return { ...attendee, responseStatus: input.responseStatus };
+          }
+          return attendee;
+        });
+
+        const updatedEvent = await client.calendars.events.update(
+          input.eventId,
+          {
+            calendarId: input.calendarId,
+            attendees: updatedAttendees,
+            attendeesOmitted: false, // Ensure attendees list is included
+          }
+        );
+
+        return processEventData(updatedEvent, input.calendarId);
+      } catch (error) {
+        console.error("Error updating attendee response:", error);
         throw error;
       }
     }),

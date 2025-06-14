@@ -41,6 +41,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
+import { getEventPermissions, getUserResponseStatus, canRespondToEvent } from "@/components/event-calendar/utils";
 
 interface EventDialogProps {
   event: CalendarEvent | null;
@@ -48,6 +49,7 @@ interface EventDialogProps {
   onClose: () => void;
   onDelete: (eventId: string) => void;
   onSave: (event: CalendarEvent) => void;
+  onResponseUpdate?: (eventId: string, response: "accepted" | "declined" | "tentative") => void;
 }
 
 // Pre-compute time options once outside of the component
@@ -67,12 +69,133 @@ const timeOptions = (() => {
   return options;
 })();
 
+// New component for attendee-only interface
+function AttendeeEventView({ event, onClose, onResponseUpdate }: {
+  event: CalendarEvent;
+  onClose: () => void;
+  onResponseUpdate: (eventId: string, response: "accepted" | "declined" | "tentative") => void;
+}) {
+  const currentResponse = getUserResponseStatus(event);
+  const canRespond = canRespondToEvent(event);
+
+  const handleResponseUpdate = (response: "accepted" | "declined" | "tentative") => {
+    if (event.id) {
+      onResponseUpdate(event.id, response);
+    }
+  };
+
+  return (
+    <Dialog open={true} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>Event Details</DialogTitle>
+          <DialogDescription className="sr-only">
+            View event details and respond to invitation
+          </DialogDescription>
+        </DialogHeader>
+        
+        <div className="grid gap-4 py-4">
+          <div className="*:not-first:mt-1.5">
+            <Label htmlFor="title">Title</Label>
+            <div className="text-sm font-medium bg-muted px-3 py-2 rounded-md">
+              {event.title || "(No title)"}
+            </div>
+          </div>
+
+          {event.description && (
+            <div className="*:not-first:mt-1.5">
+              <Label htmlFor="description">Description</Label>
+              <div className="text-sm bg-muted px-3 py-2 rounded-md">
+                {event.description}
+              </div>
+            </div>
+          )}
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="*:not-first:mt-1.5">
+              <Label>Start</Label>
+              <div className="text-sm bg-muted px-3 py-2 rounded-md">
+                {event.allDay ? "All day" : format(new Date(event.start), "PPP p")}
+              </div>
+            </div>
+            <div className="*:not-first:mt-1.5">
+              <Label>End</Label>
+              <div className="text-sm bg-muted px-3 py-2 rounded-md">
+                {event.allDay ? "All day" : format(new Date(event.end), "PPP p")}
+              </div>
+            </div>
+          </div>
+
+          {event.location && (
+            <div className="*:not-first:mt-1.5">
+              <Label>Location</Label>
+              <div className="text-sm bg-muted px-3 py-2 rounded-md">
+                {event.location}
+              </div>
+            </div>
+          )}
+
+          {event.organizer && (
+            <div className="*:not-first:mt-1.5">
+              <Label>Organizer</Label>
+              <div className="text-sm bg-muted px-3 py-2 rounded-md">
+                {event.organizer.displayName || event.organizer.email}
+              </div>
+            </div>
+          )}
+
+          {canRespond && (
+            <div className="*:not-first:mt-1.5">
+              <Label>Your Response</Label>
+              <div className="flex gap-2 mt-2">
+                <Button
+                  variant={currentResponse === "accepted" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => handleResponseUpdate("accepted")}
+                >
+                  Accept
+                </Button>
+                <Button
+                  variant={currentResponse === "tentative" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => handleResponseUpdate("tentative")}
+                >
+                  Maybe
+                </Button>
+                <Button
+                  variant={currentResponse === "declined" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => handleResponseUpdate("declined")}
+                >
+                  Decline
+                </Button>
+              </div>
+              {currentResponse && (
+                <div className="text-xs text-muted-foreground mt-1">
+                  Current response: {currentResponse}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>
+            Close
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 export function EventDialog({
   event,
   isOpen,
   onClose,
   onDelete,
   onSave,
+  onResponseUpdate,
 }: EventDialogProps) {
   const [formState, setFormState] = useState({
     allDay: false,
@@ -248,6 +371,22 @@ export function EventDialog({
     setUiState((prev) => ({ ...prev, endDateOpen: open }));
   };
 
+  // Check permissions if event exists
+  const permissions = event ? getEventPermissions(event) : null;
+
+  // If user is only an attendee, show the attendee interface
+  if (event && permissions?.userRole === "attendee" && !permissions.canEdit) {
+    return (
+      <AttendeeEventView
+        event={event}
+        onClose={onClose}
+        onResponseUpdate={onResponseUpdate || (() => {})}
+      />
+    );
+  }
+
+  // For organizers or creators, show the full edit interface
+  // (keeping the existing EventDialog implementation)
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="sm:max-w-[425px]">
@@ -264,6 +403,14 @@ export function EventDialog({
             {error}
           </div>
         )}
+        
+        {/* Permission warning for cases where user might not have edit permissions */}
+        {event && permissions && !permissions.canEdit && (
+          <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 rounded-md px-3 py-2 text-sm">
+            You don't have permission to edit this event.
+          </div>
+        )}
+
         <div className="grid gap-4 py-4">
           <div className="*:not-first:mt-1.5">
             <Label htmlFor="title">Title</Label>
@@ -481,7 +628,7 @@ export function EventDialog({
           </fieldset>
         </div>
         <DialogFooter className="flex-row sm:justify-between">
-          {event?.id && (
+          {event?.id && permissions?.canDelete && (
             <Button
               size="icon"
               variant="outline"
@@ -496,7 +643,9 @@ export function EventDialog({
             <Button variant="outline" onClick={onClose}>
               Cancel
             </Button>
-            <Button onClick={handleSave}>Save</Button>
+            {(!event || !permissions || permissions.canEdit) && (
+              <Button onClick={handleSave}>Save</Button>
+            )}
           </div>
         </DialogFooter>
       </DialogContent>

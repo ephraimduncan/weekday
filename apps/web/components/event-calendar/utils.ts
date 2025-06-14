@@ -1,4 +1,9 @@
-import type { CalendarEvent, EventColor } from "@/components/event-calendar";
+import type {
+  CalendarEvent,
+  EventColor,
+  EventPermissions,
+  UserEventRole,
+} from "./types";
 
 import { isSameDay } from "date-fns";
 import { match } from "ts-pattern";
@@ -181,4 +186,112 @@ export function addHoursToDate(date: Date, hours: number): Date {
   const result = new Date(date);
   result.setHours(result.getHours() + hours);
   return result;
+}
+
+/**
+ * Determines the user's role for a given event based on Google Calendar API data
+ */
+export function getUserEventRole(event: CalendarEvent): UserEventRole {
+  // Check if user is the organizer
+  if (event.organizer?.self === true) {
+    return "organizer";
+  }
+
+  // Check if user is the creator
+  if (event.creator?.self === true) {
+    return "organizer";
+  }
+
+  // Check if user is in the attendees list
+  if (event.attendees && Array.isArray(event.attendees)) {
+    const userAttendee = event.attendees.find(attendee => attendee.self === true);
+    if (userAttendee) {
+      return "attendee";
+    }
+  }
+
+  return "none";
+}
+
+/**
+ * Determines event permissions based on user role and event data
+ */
+export function getEventPermissions(event: CalendarEvent): EventPermissions {
+  const userRole = getUserEventRole(event);
+
+  switch (userRole) {
+    case "organizer":
+      return {
+        canEdit: true,
+        canDelete: true,
+        canInvite: true,
+        canSeeGuests: true,
+        canModify: true,
+        userRole,
+      };
+
+    case "attendee":
+      return {
+        canEdit: false, // Attendees can only respond, not edit event details
+        canDelete: false,
+        canInvite: false,
+        canSeeGuests: true, // Assuming guests can see other guests by default
+        canModify: false,
+        userRole,
+      };
+
+    case "none":
+    default:
+      return {
+        canEdit: false,
+        canDelete: false,
+        canInvite: false,
+        canSeeGuests: false,
+        canModify: false,
+        userRole: "none",
+      };
+  }
+}
+
+/**
+ * Validates if the user has permission to perform a specific action on an event
+ */
+export function validateEventPermission(
+  event: CalendarEvent,
+  action: "edit" | "delete" | "invite" | "modify"
+): boolean {
+  const permissions = getEventPermissions(event);
+
+  switch (action) {
+    case "edit":
+      return permissions.canEdit;
+    case "delete":
+      return permissions.canDelete;
+    case "invite":
+      return permissions.canInvite;
+    case "modify":
+      return permissions.canModify;
+    default:
+      return false;
+  }
+}
+
+/**
+ * Gets the user's current response status for an event (if they're an attendee)
+ */
+export function getUserResponseStatus(event: CalendarEvent): string | null {
+  if (!event.attendees || !Array.isArray(event.attendees)) {
+    return null;
+  }
+
+  const userAttendee = event.attendees.find(attendee => attendee.self === true);
+  return userAttendee?.responseStatus || null;
+}
+
+/**
+ * Checks if the current user can respond to an event invitation
+ */
+export function canRespondToEvent(event: CalendarEvent): boolean {
+  const userRole = getUserEventRole(event);
+  return userRole === "attendee";
 }
