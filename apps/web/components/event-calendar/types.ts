@@ -9,6 +9,7 @@ export interface CalendarEvent {
   description?: string;
   label?: string;
   location?: string;
+  recurrence?: RecurrenceType;
 }
 
 export type CalendarView = "agenda" | "day" | "month" | "week";
@@ -25,3 +26,5 @@ export type EventColor =
   | "rose"
   | "violet"
   | "yellow";
+
+export type RecurrenceType = "daily" | "monthly" | "none" | "weekly" | "yearly";

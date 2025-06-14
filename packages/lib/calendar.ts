@@ -93,11 +93,11 @@ export function prepareEventData(
     start?: Date;
     title?: string;
   },
-  currentEvent?: GoogleCalendarEvent
+  currentEvent?: GoogleCalendarEvent,
+  timeZone?: string
 ): Record<string, any> {
   const eventData: Record<string, any> = { ...currentEvent };
 
-  // Update fields that were provided
   if (event.title !== undefined) {
     eventData.summary = event.title;
   }
@@ -108,24 +108,31 @@ export function prepareEventData(
     eventData.location = event.location;
   }
 
-  // Handle date updates
   const isAllDay = event.allDay ?? !!(currentEvent as any)?.start?.date;
+  const originalStartTz = (currentEvent as any)?.start?.timeZone;
+  const originalEndTz = (currentEvent as any)?.end?.timeZone;
+  const defaultTimeZone = timeZone || originalStartTz || "UTC";
 
   if (isAllDay && event.start) {
     const startDate = event.start.toISOString().split("T")[0];
     eventData.start = { date: startDate };
   } else if (event.start) {
-    eventData.start = { dateTime: event.start.toISOString() };
+    eventData.start = {
+      dateTime: event.start.toISOString(),
+      timeZone: defaultTimeZone,
+    };
   }
 
   if (isAllDay && event.end) {
     const endDate = event.end.toISOString().split("T")[0];
     eventData.end = { date: endDate };
   } else if (event.end) {
-    eventData.end = { dateTime: event.end.toISOString() };
+    eventData.end = {
+      dateTime: event.end.toISOString(),
+      timeZone: originalEndTz || defaultTimeZone,
+    };
   }
 
-  // Set color if provided
   if (event.color) {
     for (const [colorId, colorInfo] of Object.entries(GOOGLE_CALENDAR_COLORS)) {
       if (colorInfo.color === event.color) {
@@ -138,9 +145,6 @@ export function prepareEventData(
   return eventData;
 }
 
-// Schemas for Google FreeBusy API response
-
-// Helper function to merge and sort busy intervals
 export function mergeAndSortBusyIntervals(
   rawIntervals: Array<{ end: string; start: string }>
 ): Array<{ end: Date; start: Date }> {
@@ -208,4 +212,16 @@ export function calculateFreeSlotsFromBusy(
   }
 
   return freeSlots;
+}
+
+export function convertRecurrenceToRRule(
+  recurrenceType: "none" | "daily" | "weekly" | "monthly" | "yearly",
+  startDate: Date
+): string[] | undefined {
+  if (recurrenceType === "none") {
+    return undefined;
+  }
+
+  const frequency = recurrenceType.toUpperCase();
+  return [`RRULE:FREQ=${frequency}`];
 }

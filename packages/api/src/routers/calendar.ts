@@ -1,9 +1,13 @@
 import { v7 as uuidv7 } from "uuid";
 import { z } from "zod";
 
-import { RefreshableGoogleCalendar } from "@weekday/google-calendar";
+import {
+  RefreshableGoogleCalendar,
+  type Event as GoogleCalendarEvent,
+} from "@weekday/google-calendar";
 import {
   calculateFreeSlotsFromBusy,
+  convertRecurrenceToRRule,
   getGoogleAccount,
   mergeAndSortBusyIntervals,
   prepareEventData,
@@ -44,6 +48,9 @@ export const calendarRouter = createTRPCRouter({
           description: z.string().optional(),
           end: z.date(),
           location: z.string().optional(),
+          recurrence: z
+            .enum(["none", "daily", "weekly", "monthly", "yearly"])
+            .optional(),
           reminders: z
             .object({
               overrides: z
@@ -93,6 +100,16 @@ export const calendarRouter = createTRPCRouter({
         finalEventPayload.conferenceData = {
           createRequest: { requestId: uuidv7() },
         };
+      }
+
+      if (input.event.recurrence && input.event.recurrence !== "none") {
+        const recurrenceRules = convertRecurrenceToRRule(
+          input.event.recurrence,
+          input.event.start
+        );
+        if (recurrenceRules) {
+          finalEventPayload.recurrence = recurrenceRules;
+        }
       }
 
       const createParams: any = {
@@ -416,6 +433,9 @@ export const calendarRouter = createTRPCRouter({
           description: z.string().optional(),
           end: z.date().optional(),
           location: z.string().optional(),
+          recurrence: z
+            .enum(["none", "daily", "weekly", "monthly", "yearly"])
+            .optional(),
           start: z.date().optional(),
           title: z.string().optional(),
         }),
@@ -437,6 +457,8 @@ export const calendarRouter = createTRPCRouter({
           }
         );
 
+        console.log("currentEvent trpc route: calendar", currentEvent);
+
         const eventData = prepareEventData(
           {
             allDay: input.event.allDay,
@@ -449,6 +471,24 @@ export const calendarRouter = createTRPCRouter({
           },
           currentEvent
         );
+
+        if (input.event.recurrence !== undefined) {
+          if (input.event.recurrence === "none") {
+            eventData.recurrence = null;
+          } else {
+            const recurrenceRules = convertRecurrenceToRRule(
+              input.event.recurrence,
+              input.event.start ||
+                new Date(
+                  (currentEvent as any).start?.dateTime ||
+                    (currentEvent as any).start?.date!
+                )
+            );
+            if (recurrenceRules) {
+              eventData.recurrence = recurrenceRules;
+            }
+          }
+        }
 
         const updatedEvent = await client.calendars.events.update(
           input.eventId,
