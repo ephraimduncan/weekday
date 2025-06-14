@@ -302,14 +302,15 @@ export function BigCalendar() {
       },
     });
 
-  // New mutation for attendee responses
   const { mutate: updateAttendeeResponse } =
     api.calendar.updateAttendeeResponse.useMutation({
       onError: (err) => {
         console.error("Error updating attendee response:", err);
       },
+      onSettled: () => {
+        utils.calendar.getEvents.invalidate({ timeMax, timeMin });
+      },
       onSuccess: (data) => {
-        // Optimistically update the local event data
         const queryKey = { timeMax, timeMin };
         utils.calendar.getEvents.setData(
           queryKey,
@@ -318,10 +319,6 @@ export function BigCalendar() {
               event.id === data.id ? data : event,
             ) as GetEventsQueryOutput,
         );
-      },
-      onSettled: () => {
-        // Invalidate queries to ensure fresh data
-        utils.calendar.getEvents.invalidate({ timeMax, timeMin });
       },
     });
 
@@ -388,11 +385,13 @@ export function BigCalendar() {
     });
   };
 
-  const handleAttendeeResponse = (eventId: string, response: "accepted" | "declined" | "tentative") => {
-    // Find the event to get its calendar ID
-    const event = visibleEvents?.find(e => e.id === eventId);
+  const handleAttendeeResponse = (
+    eventId: string,
+    response: "accepted" | "declined" | "tentative",
+  ) => {
+    const event = visibleEvents?.find((e) => e.id === eventId);
     const calendarId = event?.calendarId || "primary";
-    
+
     updateAttendeeResponse({
       calendarId,
       eventId,

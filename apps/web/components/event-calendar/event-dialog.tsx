@@ -13,6 +13,11 @@ import {
   EndHour,
   StartHour,
 } from "@/components/event-calendar/constants";
+import {
+  canRespondToEvent,
+  getEventPermissions,
+  getUserResponseStatus,
+} from "@/components/event-calendar/utils";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -41,7 +46,6 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
-import { getEventPermissions, getUserResponseStatus, canRespondToEvent } from "@/components/event-calendar/utils";
 
 interface EventDialogProps {
   event: CalendarEvent | null;
@@ -49,36 +53,47 @@ interface EventDialogProps {
   onClose: () => void;
   onDelete: (eventId: string) => void;
   onSave: (event: CalendarEvent) => void;
-  onResponseUpdate?: (eventId: string, response: "accepted" | "declined" | "tentative") => void;
+  onResponseUpdate?: (
+    eventId: string,
+    response: "accepted" | "declined" | "tentative",
+  ) => void;
 }
 
-// Pre-compute time options once outside of the component
 const timeOptions = (() => {
   const options = [];
+
   for (let hour = StartHour; hour <= EndHour; hour++) {
     for (let minute = 0; minute < 60; minute += 15) {
       const formattedHour = hour.toString().padStart(2, "0");
       const formattedMinute = minute.toString().padStart(2, "0");
       const value = `${formattedHour}:${formattedMinute}`;
-      // Use a fixed date to avoid unnecessary date object creations
       const date = new Date(2000, 0, 1, hour, minute);
       const label = format(date, "h:mm a");
       options.push({ label, value });
     }
   }
+
   return options;
 })();
 
-// New component for attendee-only interface
-function AttendeeEventView({ event, onClose, onResponseUpdate }: {
+const AttendeeEventView = ({
+  event,
+  onClose,
+  onResponseUpdate,
+}: {
   event: CalendarEvent;
   onClose: () => void;
-  onResponseUpdate: (eventId: string, response: "accepted" | "declined" | "tentative") => void;
-}) {
+  onResponseUpdate: (
+    eventId: string,
+    response: "accepted" | "declined" | "tentative",
+  ) => void;
+}) => {
   const currentResponse = getUserResponseStatus(event);
   const canRespond = canRespondToEvent(event);
 
-  const handleResponseUpdate = (response: "accepted" | "declined" | "tentative") => {
+  const handleResponseUpdate = (
+    response: "accepted" | "declined" | "tentative",
+  ) => {
     if (event.id) {
       onResponseUpdate(event.id, response);
     }
@@ -93,11 +108,11 @@ function AttendeeEventView({ event, onClose, onResponseUpdate }: {
             View event details and respond to invitation
           </DialogDescription>
         </DialogHeader>
-        
+
         <div className="grid gap-4 py-4">
           <div className="*:not-first:mt-1.5">
             <Label htmlFor="title">Title</Label>
-            <div className="text-sm font-medium bg-muted px-3 py-2 rounded-md">
+            <div className="bg-muted rounded-md px-3 py-2 text-sm font-medium">
               {event.title || "(No title)"}
             </div>
           </div>
@@ -105,7 +120,7 @@ function AttendeeEventView({ event, onClose, onResponseUpdate }: {
           {event.description && (
             <div className="*:not-first:mt-1.5">
               <Label htmlFor="description">Description</Label>
-              <div className="text-sm bg-muted px-3 py-2 rounded-md">
+              <div className="bg-muted rounded-md px-3 py-2 text-sm">
                 {event.description}
               </div>
             </div>
@@ -114,14 +129,18 @@ function AttendeeEventView({ event, onClose, onResponseUpdate }: {
           <div className="grid grid-cols-2 gap-4">
             <div className="*:not-first:mt-1.5">
               <Label>Start</Label>
-              <div className="text-sm bg-muted px-3 py-2 rounded-md">
-                {event.allDay ? "All day" : format(new Date(event.start), "PPP p")}
+              <div className="bg-muted rounded-md px-3 py-2 text-sm">
+                {event.allDay
+                  ? "All day"
+                  : format(new Date(event.start), "PPP p")}
               </div>
             </div>
             <div className="*:not-first:mt-1.5">
               <Label>End</Label>
-              <div className="text-sm bg-muted px-3 py-2 rounded-md">
-                {event.allDay ? "All day" : format(new Date(event.end), "PPP p")}
+              <div className="bg-muted rounded-md px-3 py-2 text-sm">
+                {event.allDay
+                  ? "All day"
+                  : format(new Date(event.end), "PPP p")}
               </div>
             </div>
           </div>
@@ -129,7 +148,7 @@ function AttendeeEventView({ event, onClose, onResponseUpdate }: {
           {event.location && (
             <div className="*:not-first:mt-1.5">
               <Label>Location</Label>
-              <div className="text-sm bg-muted px-3 py-2 rounded-md">
+              <div className="bg-muted rounded-md px-3 py-2 text-sm">
                 {event.location}
               </div>
             </div>
@@ -138,7 +157,7 @@ function AttendeeEventView({ event, onClose, onResponseUpdate }: {
           {event.organizer && (
             <div className="*:not-first:mt-1.5">
               <Label>Organizer</Label>
-              <div className="text-sm bg-muted px-3 py-2 rounded-md">
+              <div className="bg-muted rounded-md px-3 py-2 text-sm">
                 {event.organizer.displayName || event.organizer.email}
               </div>
             </div>
@@ -147,31 +166,37 @@ function AttendeeEventView({ event, onClose, onResponseUpdate }: {
           {canRespond && (
             <div className="*:not-first:mt-1.5">
               <Label>Your Response</Label>
-              <div className="flex gap-2 mt-2">
+              <div className="mt-2 flex gap-2">
                 <Button
-                  variant={currentResponse === "accepted" ? "default" : "outline"}
                   size="sm"
+                  variant={
+                    currentResponse === "accepted" ? "default" : "outline"
+                  }
                   onClick={() => handleResponseUpdate("accepted")}
                 >
                   Accept
                 </Button>
                 <Button
-                  variant={currentResponse === "tentative" ? "default" : "outline"}
                   size="sm"
+                  variant={
+                    currentResponse === "tentative" ? "default" : "outline"
+                  }
                   onClick={() => handleResponseUpdate("tentative")}
                 >
                   Maybe
                 </Button>
                 <Button
-                  variant={currentResponse === "declined" ? "default" : "outline"}
                   size="sm"
+                  variant={
+                    currentResponse === "declined" ? "default" : "outline"
+                  }
                   onClick={() => handleResponseUpdate("declined")}
                 >
                   Decline
                 </Button>
               </div>
               {currentResponse && (
-                <div className="text-xs text-muted-foreground mt-1">
+                <div className="text-muted-foreground mt-1 text-xs">
                   Current response: {currentResponse}
                 </div>
               )}
@@ -187,15 +212,15 @@ function AttendeeEventView({ event, onClose, onResponseUpdate }: {
       </DialogContent>
     </Dialog>
   );
-}
+};
 
 export function EventDialog({
   event,
   isOpen,
   onClose,
   onDelete,
-  onSave,
   onResponseUpdate,
+  onSave,
 }: EventDialogProps) {
   const [formState, setFormState] = useState({
     allDay: false,
@@ -213,8 +238,6 @@ export function EventDialog({
     endDateOpen: false,
     startDateOpen: false,
   });
-
-  // Initialize form with event data when it changes
 
   useEffect(() => {
     if (event) {
@@ -290,13 +313,11 @@ export function EventDialog({
       end.setHours(23, 59, 59, 999);
     }
 
-    // Validate that end date is not before start date
     if (isBefore(end, start)) {
       setError("End date cannot be before start date");
       return;
     }
 
-    // Use generic title if empty
     const eventTitle = formState.title.trim() ? formState.title : "(no title)";
 
     onSave({
@@ -317,7 +338,6 @@ export function EventDialog({
     }
   };
 
-  // Updated color options to match types.ts
   const colorOptions: Array<{
     bgClass: string;
     borderClass: string;
@@ -371,22 +391,22 @@ export function EventDialog({
     setUiState((prev) => ({ ...prev, endDateOpen: open }));
   };
 
-  // Check permissions if event exists
-  const permissions = event ? getEventPermissions(event) : null;
+  const permissions = event?.id ? getEventPermissions(event) : null;
 
-  // If user is only an attendee, show the attendee interface
-  if (event && permissions?.userRole === "attendee" && !permissions.canEdit) {
+  if (
+    event?.id &&
+    permissions?.userRole === "attendee" &&
+    !permissions.canEdit
+  ) {
     return (
       <AttendeeEventView
-        event={event}
         onClose={onClose}
         onResponseUpdate={onResponseUpdate || (() => {})}
+        event={event}
       />
     );
   }
 
-  // For organizers or creators, show the full edit interface
-  // (keeping the existing EventDialog implementation)
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="sm:max-w-[425px]">
@@ -401,13 +421,6 @@ export function EventDialog({
         {error && (
           <div className="bg-destructive/15 text-destructive rounded-md px-3 py-2 text-sm">
             {error}
-          </div>
-        )}
-        
-        {/* Permission warning for cases where user might not have edit permissions */}
-        {event && permissions && !permissions.canEdit && (
-          <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 rounded-md px-3 py-2 text-sm">
-            You don't have permission to edit this event.
           </div>
         )}
 
@@ -628,7 +641,7 @@ export function EventDialog({
           </fieldset>
         </div>
         <DialogFooter className="flex-row sm:justify-between">
-          {event?.id && permissions?.canDelete && (
+          {event?.id && (!permissions || permissions.canDelete) && (
             <Button
               size="icon"
               variant="outline"
@@ -643,7 +656,7 @@ export function EventDialog({
             <Button variant="outline" onClick={onClose}>
               Cancel
             </Button>
-            {(!event || !permissions || permissions.canEdit) && (
+            {(!event?.id || !permissions || permissions.canEdit) && (
               <Button onClick={handleSave}>Save</Button>
             )}
           </div>

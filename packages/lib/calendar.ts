@@ -15,31 +15,40 @@ export const ProcessedCalendarEventSchema = z.object({
   location: z.string().optional(),
   start: z.date(),
   title: z.string(),
-  // Google Calendar permission fields
-  organizer: z.object({
-    id: z.string().optional(),
-    displayName: z.string().optional(),
-    email: z.string().optional(),
-    self: z.boolean().optional(),
-  }).optional(),
-  creator: z.object({
-    id: z.string().optional(),
-    displayName: z.string().optional(),
-    email: z.string().optional(),
-    self: z.boolean().optional(),
-  }).optional(),
-  attendees: z.array(z.object({
-    id: z.string().optional(),
-    displayName: z.string().optional(),
-    email: z.string().optional(),
-    organizer: z.boolean().optional(),
-    self: z.boolean().optional(),
-    resource: z.boolean().optional(),
-    optional: z.boolean().optional(),
-    responseStatus: z.enum(["needsAction", "declined", "tentative", "accepted"]).optional(),
-    comment: z.string().optional(),
-    additionalGuests: z.number().optional(),
-  })).optional(),
+  organizer: z
+    .object({
+      id: z.string().optional(),
+      displayName: z.string().optional(),
+      email: z.string().optional(),
+      self: z.boolean().optional(),
+    })
+    .optional(),
+  creator: z
+    .object({
+      id: z.string().optional(),
+      displayName: z.string().optional(),
+      email: z.string().optional(),
+      self: z.boolean().optional(),
+    })
+    .optional(),
+  attendees: z
+    .array(
+      z.object({
+        id: z.string().optional(),
+        displayName: z.string().optional(),
+        email: z.string().optional(),
+        organizer: z.boolean().optional(),
+        self: z.boolean().optional(),
+        resource: z.boolean().optional(),
+        optional: z.boolean().optional(),
+        responseStatus: z
+          .enum(["needsAction", "declined", "tentative", "accepted"])
+          .optional(),
+        comment: z.string().optional(),
+        additionalGuests: z.number().optional(),
+      })
+    )
+    .optional(),
 });
 
 export type Account = {
@@ -96,34 +105,40 @@ export function processEventData(
   }
 
   // Extract organizer information
-  const organizer = eventItem.organizer ? {
-    id: eventItem.organizer.id,
-    displayName: eventItem.organizer.displayName,
-    email: eventItem.organizer.email,
-    self: eventItem.organizer.self,
-  } : undefined;
+  const organizer = eventItem.organizer
+    ? {
+        id: eventItem.organizer.id,
+        displayName: eventItem.organizer.displayName,
+        email: eventItem.organizer.email,
+        self: eventItem.organizer.self,
+      }
+    : undefined;
 
   // Extract creator information
-  const creator = eventItem.creator ? {
-    id: eventItem.creator.id,
-    displayName: eventItem.creator.displayName,
-    email: eventItem.creator.email,
-    self: eventItem.creator.self,
-  } : undefined;
+  const creator = eventItem.creator
+    ? {
+        id: eventItem.creator.id,
+        displayName: eventItem.creator.displayName,
+        email: eventItem.creator.email,
+        self: eventItem.creator.self,
+      }
+    : undefined;
 
   // Extract attendees information
-  const attendees = eventItem.attendees ? eventItem.attendees.map((attendee: any) => ({
-    id: attendee.id,
-    displayName: attendee.displayName,
-    email: attendee.email,
-    organizer: attendee.organizer,
-    self: attendee.self,
-    resource: attendee.resource,
-    optional: attendee.optional,
-    responseStatus: attendee.responseStatus,
-    comment: attendee.comment,
-    additionalGuests: attendee.additionalGuests,
-  })) : undefined;
+  const attendees = eventItem.attendees
+    ? eventItem.attendees.map((attendee: any) => ({
+        id: attendee.id,
+        displayName: attendee.displayName,
+        email: attendee.email,
+        organizer: attendee.organizer,
+        self: attendee.self,
+        resource: attendee.resource,
+        optional: attendee.optional,
+        responseStatus: attendee.responseStatus,
+        comment: attendee.comment,
+        additionalGuests: attendee.additionalGuests,
+      }))
+    : undefined;
 
   return {
     id: eventItem.id,
@@ -166,7 +181,6 @@ export function prepareEventData(
     eventData.location = event.location;
   }
 
-  // Handle date updates
   const isAllDay = event.allDay ?? !!(currentEvent as any)?.start?.date;
 
   if (isAllDay && event.start) {
@@ -183,7 +197,6 @@ export function prepareEventData(
     eventData.end = { dateTime: event.end.toISOString() };
   }
 
-  // Set color if provided
   if (event.color) {
     for (const [colorId, colorInfo] of Object.entries(GOOGLE_CALENDAR_COLORS)) {
       if (colorInfo.color === event.color) {
@@ -196,9 +209,6 @@ export function prepareEventData(
   return eventData;
 }
 
-// Schemas for Google FreeBusy API response
-
-// Helper function to merge and sort busy intervals
 export function mergeAndSortBusyIntervals(
   rawIntervals: Array<{ end: string; start: string }>
 ): Array<{ end: Date; start: Date }> {
@@ -223,19 +233,16 @@ export function mergeAndSortBusyIntervals(
     const lastMergedInterval = mergedIntervals[mergedIntervals.length - 1]!;
 
     if (currentInterval.start.getTime() <= lastMergedInterval.end.getTime()) {
-      // Overlapping or adjacent interval, merge them
       if (currentInterval.end.getTime() > lastMergedInterval.end.getTime()) {
         lastMergedInterval.end = currentInterval.end;
       }
     } else {
-      // Non-overlapping interval, add it to the list
       mergedIntervals.push({ ...currentInterval });
     }
   }
   return mergedIntervals;
 }
 
-// Helper function to calculate free slots from merged busy intervals
 export function calculateFreeSlotsFromBusy(
   busyIntervals: Array<{ end: Date; start: Date }>,
   queryStartTime: Date,
