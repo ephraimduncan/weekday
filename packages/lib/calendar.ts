@@ -114,7 +114,6 @@ export function processEventData(
       }
     : undefined;
 
-  // Extract creator information
   const creator = eventItem.creator
     ? {
         id: eventItem.creator.id,
@@ -124,7 +123,6 @@ export function processEventData(
       }
     : undefined;
 
-  // Extract attendees information
   const attendees = eventItem.attendees
     ? eventItem.attendees.map((attendee: any) => ({
         id: attendee.id,
@@ -170,7 +168,6 @@ export function prepareEventData(
 ): Record<string, any> {
   const eventData: Record<string, any> = { ...currentEvent };
 
-  // Update fields that were provided
   if (event.title !== undefined) {
     eventData.summary = event.title;
   }
