@@ -8,7 +8,7 @@ import {
 } from "better-auth/next-js";
 import { headers } from "next/headers";
 
-import { db, schema } from "@weekday/db";
+import { db, schema, eq } from "@weekday/db";
 import { env } from "@weekday/env";
 
 const betterAuth = betterAuthClient({
@@ -21,6 +21,25 @@ const betterAuth = betterAuthClient({
       create: {
         async before(account) {
           console.log(account, "account");
+        },
+        async after(account) {
+          // Handle Google accounts created without refresh tokens
+          if (account.providerId === "google" && !account.refreshToken) {
+            try {
+              await db
+                .delete(schema.account)
+                .where(eq(schema.account.id, account.id));
+            } catch (error) {
+              console.error(
+                `❌ Failed to remove problematic account ${account.id}:`,
+                error
+              );
+            }
+          } else if (account.providerId === "google" && account.refreshToken) {
+            console.log(
+              `✅ Google account created successfully with refresh token for user ${account.userId}`
+            );
+          }
         },
       },
     },
@@ -41,6 +60,17 @@ const betterAuth = betterAuthClient({
         "profile",
         "https://www.googleapis.com/auth/calendar",
       ],
+      redirectUrlParams: {
+        access_type: "offline",
+        prompt: "consent",
+        include_granted_scopes: "true",
+      },
+      prompt: "consent",
+      extraParams: {
+        access_type: "offline",
+        prompt: "consent",
+        include_granted_scopes: "true",
+      },
     },
   },
 });

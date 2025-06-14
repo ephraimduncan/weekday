@@ -910,8 +910,18 @@ export class RefreshableGoogleCalendar extends GoogleCalendar {
     try {
       const account = await this.getGoogleAccount();
       if (!account.refreshToken) {
-        console.log("No refresh token available for account:", account.id);
-        return this.apiKey;
+        console.error(
+          `No refresh token available for account: ${account.id}. ` +
+            `This usually means the user needs to re-authenticate to grant offline access. ` +
+            `The user should log out and log back in to refresh their authentication.`
+        );
+        // Throw a specific error that can be caught upstream.
+        const authError = new Error(
+          "Authentication has expired and cannot be refreshed automatically. " +
+            "Please sign out and sign back in to re-authenticate."
+        );
+        authError.name = "AuthenticationExpiredError";
+        throw authError;
       }
 
       console.log(
@@ -931,7 +941,7 @@ export class RefreshableGoogleCalendar extends GoogleCalendar {
 
       if (!refreshedAccount?.accessToken) {
         console.error("No access token in refresh response:", refreshedAccount);
-        return this.apiKey;
+        throw new Error("Failed to refresh access token");
       }
 
       console.log(
@@ -947,9 +957,10 @@ export class RefreshableGoogleCalendar extends GoogleCalendar {
       }
 
       return refreshedAccount.accessToken;
-    } catch (error) {
-      console.error("Failed to refresh token:", error);
-      return this.apiKey;
+    } catch (refreshError: any) {
+      console.error("Token refresh failed:", refreshError);
+      // Re-throw the error so it can be handled by the calling code
+      throw refreshError;
     }
   }
 
@@ -1006,23 +1017,29 @@ export class RefreshableGoogleCalendar extends GoogleCalendar {
           retriesRemaining
         );
 
-        const mockResponse = new Response(null, { status: 401 });
-        const originalToken = this.apiKey;
-        const newAccessToken = await this.refreshTokenIfNeeded(mockResponse);
+        try {
+          const mockResponse = new Response(null, { status: 401 });
+          const originalToken = this.apiKey;
+          const newAccessToken = await this.refreshTokenIfNeeded(mockResponse);
 
-        if (newAccessToken && newAccessToken !== originalToken) {
-          console.log("Token was refreshed, retrying request");
-          // Token was refreshed successfully, retry the request
-          // The authHeaders method will automatically use the updated this.apiKey
-          return await (this as any).makeRequest(
-            optionsInput,
-            retriesRemaining - 1,
-            retryOfRequestLogID
-          );
-        } else {
-          console.log(
-            "Token refresh failed or returned same token, not retrying"
-          );
+          if (newAccessToken && newAccessToken !== originalToken) {
+            console.log("Token was refreshed, retrying request");
+            // Token was refreshed successfully, retry the request
+            // The authHeaders method will automatically use the updated this.apiKey
+            return await (this as any).makeRequest(
+              optionsInput,
+              retriesRemaining - 1,
+              retryOfRequestLogID
+            );
+          } else {
+            console.log(
+              "Token refresh failed or returned same token, not retrying"
+            );
+          }
+        } catch (refreshError: any) {
+          console.error("Token refresh failed:", refreshError);
+          // Re-throw the error so it can be handled by the calling code
+          throw refreshError;
         }
       }
       throw error;
