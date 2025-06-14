@@ -2,6 +2,7 @@ import { cache } from "react";
 
 import { betterAuth as betterAuthClient } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { multiSession } from "better-auth/plugins";
 import {
   toNextJsHandler as betterAuthToNextJsHandler,
   nextCookies,
@@ -44,10 +45,21 @@ const betterAuth = betterAuthClient({
       },
     },
   },
-  plugins: [nextCookies()],
+  plugins: [
+    nextCookies(),
+    multiSession({
+      maximumSessions: 10, // Allow up to 10 different account sessions
+    }),
+  ],
   session: {
     expiresIn: 60 * 60 * 24 * 14,
     updateAge: 60 * 60 * 24,
+  },
+  account: {
+    accountLinking: {
+      enabled: true,
+      trustedProviders: ["google"], // Allow automatic linking of Google accounts
+    },
   },
   socialProviders: {
     google: {
@@ -59,6 +71,7 @@ const betterAuth = betterAuthClient({
         "email",
         "profile",
         "https://www.googleapis.com/auth/calendar",
+        "https://www.googleapis.com/auth/gmail.readonly",
       ],
       redirectUrlParams: {
         access_type: "offline",

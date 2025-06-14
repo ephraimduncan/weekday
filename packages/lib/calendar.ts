@@ -25,8 +25,15 @@ export type Account = {
 
 export async function getGoogleAccount(
   db: DrizzleClient,
-  userId: string
+  userId: string,
+  accountId?: string
 ): Promise<Account> {
+  let whereConditions = [eq(account.providerId, "google"), eq(account.userId, userId)];
+  
+  if (accountId) {
+    whereConditions.push(eq(account.id, accountId));
+  }
+
   const accountRecord = await db
     .select({
       id: account.id,
@@ -34,7 +41,7 @@ export async function getGoogleAccount(
       refreshToken: account.refreshToken,
     })
     .from(account)
-    .where(and(eq(account.providerId, "google"), eq(account.userId, userId)))
+    .where(and(...whereConditions))
     .limit(1)
     .then((results) => results[0]);
 
