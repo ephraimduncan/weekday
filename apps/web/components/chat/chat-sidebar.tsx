@@ -17,7 +17,12 @@ import { useChat as useChatProvider } from "@/providers/chat-provider";
 import { api } from "@/trpc/react";
 
 import { ChatPromptInput } from "./chat-prompt-input";
-import { CreateEventCall, CreateEventResult } from "./tools/create-event";
+import {
+  CreateEventCall,
+  CreateEventResult,
+  CreateRecurringEventCall,
+  CreateRecurringEventResult,
+} from "./tools/create-event";
 import { DeleteEventCall, DeleteEventResult } from "./tools/delete-event";
 import { GetEventCall, GetEventResult } from "./tools/get-event";
 import { GetFreeSlotsCall, GetFreeSlotsResult } from "./tools/get-free-slots";
@@ -47,6 +52,7 @@ export function ChatSidebar() {
               const toolInvocation = part.toolInvocation as ToolInvocation;
               if (
                 toolInvocation.toolName === "createEvent" ||
+                toolInvocation.toolName === "createRecurringEvent" ||
                 toolInvocation.toolName === "updateEvent" ||
                 toolInvocation.toolName === "deleteEvent"
               ) {
@@ -59,6 +65,7 @@ export function ChatSidebar() {
       onToolCall: ({ toolCall }) => {
         if (
           toolCall.toolName === "createEvent" ||
+          toolCall.toolName === "createRecurringEvent" ||
           toolCall.toolName === "updateEvent" ||
           toolCall.toolName === "deleteEvent"
         ) {
@@ -184,6 +191,31 @@ export function ChatSidebar() {
                         },
                         ({ toolInvocation }) => (
                           <CreateEventResult
+                            key={toolCallId}
+                            toolInvocation={toolInvocation as ToolInvocation}
+                          />
+                        ),
+                      )
+                      .with(
+                        {
+                          toolInvocation: {
+                            state: "call",
+                            toolName: "createRecurringEvent",
+                          },
+                          type: "tool-invocation",
+                        },
+                        () => <CreateRecurringEventCall key={toolCallId} />,
+                      )
+                      .with(
+                        {
+                          toolInvocation: {
+                            state: "result",
+                            toolName: "createRecurringEvent",
+                          },
+                          type: "tool-invocation",
+                        },
+                        ({ toolInvocation }) => (
+                          <CreateRecurringEventResult
                             key={toolCallId}
                             toolInvocation={toolInvocation as ToolInvocation}
                           />
