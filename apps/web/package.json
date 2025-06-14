@@ -51,6 +51,7 @@
     "cookies-next": "^5.1.0",
     "date-fns": "^4.1.0",
     "idb-keyval": "^6.2.1",
+    "jotai": "^2.12.5",
     "lucide-react": "^0.510.0",
     "marked": "^15.0.11",
     "motion": "^12.12.1",
