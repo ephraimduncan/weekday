@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 
-import { auth } from "@weekday/auth";
+import { auth, authInstance } from "@weekday/auth";
 import { HydrateClient } from "@weekday/web/trpc/server";
+import { headers } from "next/headers";
 
 import { AppSidebar } from "@/components/app-sidebar";
 import { ResizablePanelsClient } from "@/components/resizable-panels-client";
@@ -14,11 +15,14 @@ export const metadata: Metadata = {
 
 export default async function Page() {
   const session = await auth();
+  const deviceSessions = await authInstance.api.listDeviceSessions({
+    headers: await headers(),
+  });
 
   return (
     <HydrateClient>
       <SidebarProvider>
-        <AppSidebar session={session!} />
+        <AppSidebar session={session!} sessions={deviceSessions} />
         <SidebarInset className="flex-1 bg-transparent">
           <ResizablePanelsClient />
         </SidebarInset>

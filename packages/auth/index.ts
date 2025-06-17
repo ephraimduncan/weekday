@@ -7,6 +7,7 @@ import {
   nextCookies,
 } from "better-auth/next-js";
 import { headers } from "next/headers";
+import { multiSession } from "better-auth/plugins";
 
 import { db, schema, eq } from "@weekday/db";
 import { env } from "@weekday/env";
@@ -44,7 +45,12 @@ const betterAuth = betterAuthClient({
       },
     },
   },
-  plugins: [nextCookies()],
+  plugins: [
+    nextCookies(),
+    multiSession({
+      maximumSessions: 10,
+    }),
+  ],
   session: {
     expiresIn: 60 * 60 * 24 * 14,
     updateAge: 60 * 60 * 24,

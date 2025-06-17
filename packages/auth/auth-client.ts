@@ -1,5 +1,9 @@
+import { multiSessionClient } from "better-auth/client/plugins";
 import { createAuthClient } from "better-auth/react";
-const authClient = createAuthClient();
+
+export const authClient = createAuthClient({
+  plugins: [multiSessionClient()],
+});
 
 export const { signIn, signOut, useSession } = authClient;
 

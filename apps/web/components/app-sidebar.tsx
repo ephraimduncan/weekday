@@ -30,8 +30,12 @@ import { LogoMarkDark, LogoMarkLight } from "./logo";
 
 export function AppSidebar({
   session,
+  sessions,
   ...props
-}: React.ComponentProps<typeof Sidebar> & { session: Session }) {
+}: React.ComponentProps<typeof Sidebar> & {
+  session: Session;
+  sessions: Session[];
+}) {
   const { isCalendarVisible, toggleCalendarVisibility } = useCalendarContext();
   const { data: calendars } = api.calendar.getCalendars.useQuery();
 
@@ -108,7 +112,12 @@ export function AppSidebar({
         </SidebarGroup>
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={session.user} />
+        <NavUser
+          onAccountSwitch={() => {}}
+          onAddAccount={() => {}}
+          session={session}
+          sessions={sessions}
+        />
       </SidebarFooter>
     </Sidebar>
   );
