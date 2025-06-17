@@ -10,7 +10,6 @@ import Link from "next/link";
 import { Card, CardContent } from "./ui/card";
 
 export default function ContributeSection() {
-
   const repoStats = [
     {
       icon: <Star className="size-4 text-yellow-400" />,
@@ -28,7 +27,6 @@ export default function ContributeSection() {
       value: "50+",
     },
   ];
-
 
   const socialLinks = [
     {

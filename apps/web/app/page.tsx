@@ -13,7 +13,7 @@ export default function Home() {
     <div>
       <Hero />
       <FeaturesSection />
-      <ContributeSection/>
+      <ContributeSection />
       <FooterSection />
     </div>
   );
