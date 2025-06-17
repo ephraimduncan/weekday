@@ -2,9 +2,10 @@
 
 import * as React from "react";
 
-import { linkSocial, multiSession } from "@weekday/auth/auth-client";
 import { RiAddLine, RiCheckLine, RiGoogleFill } from "@remixicon/react";
+import { linkSocial, multiSession } from "@weekday/auth/auth-client";
 
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -14,15 +15,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { api } from "@/trpc/react";
 
 interface Account {
   id: string;
-  email: string;
-  name?: string;
-  providerId: string;
   createdAt: Date;
+  email: string;
+  providerId: string;
+  name?: string;
 }
 
 interface AccountSwitcherProps {
@@ -30,7 +30,10 @@ interface AccountSwitcherProps {
   onAccountSwitch?: (accountId: string) => void;
 }
 
-export function AccountSwitcher({ currentAccount, onAccountSwitch }: AccountSwitcherProps) {
+export function AccountSwitcher({
+  currentAccount,
+  onAccountSwitch,
+}: AccountSwitcherProps) {
   const { data: sessions } = api.account.listDeviceSessions.useQuery();
   const [isAddingAccount, setIsAddingAccount] = React.useState(false);
 
@@ -38,8 +41,8 @@ export function AccountSwitcher({ currentAccount, onAccountSwitch }: AccountSwit
     setIsAddingAccount(true);
     try {
       await linkSocial({
-        provider: "google",
         callbackURL: "/calendar",
+        provider: "google",
       });
     } catch (error) {
       console.error("Failed to add account:", error);
@@ -65,21 +68,24 @@ export function AccountSwitcher({ currentAccount, onAccountSwitch }: AccountSwit
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button
-          variant="ghost"
-          className="w-full justify-start space-x-2 px-2"
-        >
+        <Button variant="ghost" className="w-full justify-start space-x-2 px-2">
           <Avatar className="h-6 w-6">
-            <AvatarImage src={currentAccount?.name ? `https://ui-avatars.com/api/?name=${encodeURIComponent(currentAccount.name)}&background=random` : undefined} />
+            <AvatarImage
+              src={
+                currentAccount?.name
+                  ? `https://ui-avatars.com/api/?name=${encodeURIComponent(currentAccount.name)}&background=random`
+                  : undefined
+              }
+            />
             <AvatarFallback className="text-xs">
               {currentAccount?.email?.[0]?.toUpperCase() || "U"}
             </AvatarFallback>
           </Avatar>
           <div className="flex flex-col items-start">
-            <span className="text-sm font-medium truncate max-w-[120px]">
+            <span className="max-w-[120px] truncate text-sm font-medium">
               {currentAccount?.name || currentAccount?.email}
             </span>
-            <span className="text-xs text-muted-foreground truncate max-w-[120px]">
+            <span className="text-muted-foreground max-w-[120px] truncate text-xs">
               {currentAccount?.email}
             </span>
           </div>
@@ -88,42 +94,49 @@ export function AccountSwitcher({ currentAccount, onAccountSwitch }: AccountSwit
       <DropdownMenuContent className="w-64" align="start">
         <DropdownMenuLabel>Accounts</DropdownMenuLabel>
         <DropdownMenuSeparator />
-        
+
         {sessions?.map((session: any) => (
           <DropdownMenuItem
             key={session.id}
+            className="flex cursor-pointer items-center space-x-2"
             onClick={() => handleSwitchAccount(session.token)}
-            className="flex items-center space-x-2 cursor-pointer"
           >
             <Avatar className="h-6 w-6">
-              <AvatarImage src={session.user?.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(session.user?.name || session.user?.email || "")}&background=random`} />
+              <AvatarImage
+                src={
+                  session.user?.image ||
+                  `https://ui-avatars.com/api/?name=${encodeURIComponent(session.user?.name || session.user?.email || "")}&background=random`
+                }
+              />
               <AvatarFallback className="text-xs">
                 {session.user?.email?.[0]?.toUpperCase() || "U"}
               </AvatarFallback>
             </Avatar>
-            <div className="flex flex-col flex-1">
-              <span className="text-sm font-medium truncate">
+            <div className="flex flex-1 flex-col">
+              <span className="truncate text-sm font-medium">
                 {session.user?.name || session.user?.email}
               </span>
-              <span className="text-xs text-muted-foreground truncate">
+              <span className="text-muted-foreground truncate text-xs">
                 {session.user?.email}
               </span>
             </div>
-            {session.active && <RiCheckLine className="h-4 w-4 text-green-500" />}
+            {session.active && (
+              <RiCheckLine className="h-4 w-4 text-green-500" />
+            )}
           </DropdownMenuItem>
         ))}
-        
+
         <DropdownMenuSeparator />
         <DropdownMenuItem
-          onClick={handleAddAccount}
+          className="flex cursor-pointer items-center space-x-2"
           disabled={isAddingAccount}
-          className="flex items-center space-x-2 cursor-pointer"
+          onClick={handleAddAccount}
         >
           <RiGoogleFill className="h-4 w-4" />
           <span className="text-sm">
             {isAddingAccount ? "Adding..." : "Add Google Account"}
           </span>
-          <RiAddLine className="h-4 w-4 ml-auto" />
+          <RiAddLine className="ml-auto h-4 w-4" />
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
