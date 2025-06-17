@@ -13,7 +13,7 @@ export class CalendarList extends APIResource {
    */
   create(
     params: CalendarListCreateParams,
-    options?: RequestOptions
+    options?: RequestOptions,
   ): APIPromise<CalendarListEntry> {
     const { colorRgbFormat, ...body } = params;
     return this._client.post("/users/me/calendarList", {
@@ -28,11 +28,11 @@ export class CalendarList extends APIResource {
    */
   retrieve(
     calendarID: string,
-    options?: RequestOptions
+    options?: RequestOptions,
   ): APIPromise<CalendarListEntry> {
     return this._client.get(
       path`/users/me/calendarList/${calendarID}`,
-      options
+      options,
     );
   }
 
@@ -42,7 +42,7 @@ export class CalendarList extends APIResource {
   update(
     calendarID: string,
     params: CalendarListUpdateParams,
-    options?: RequestOptions
+    options?: RequestOptions,
   ): APIPromise<CalendarListEntry> {
     const { colorRgbFormat, ...body } = params;
     return this._client.put(path`/users/me/calendarList/${calendarID}`, {
@@ -57,7 +57,7 @@ export class CalendarList extends APIResource {
    */
   list(
     query: CalendarListListParams | null | undefined = {},
-    options?: RequestOptions
+    options?: RequestOptions,
   ): APIPromise<CalendarListListResponse> {
     return this._client.get("/users/me/calendarList", { query, ...options });
   }
@@ -77,7 +77,7 @@ export class CalendarList extends APIResource {
    */
   watch(
     params: CalendarListWatchParams,
-    options?: RequestOptions
+    options?: RequestOptions,
   ): APIPromise<ACLAPI.Channel> {
     const {
       maxResults,

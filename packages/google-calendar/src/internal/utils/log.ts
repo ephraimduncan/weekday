@@ -24,7 +24,7 @@ const levelNumbers = {
 export const parseLogLevel = (
   maybeLevel: string | undefined,
   sourceName: string,
-  client: GoogleCalendar
+  client: GoogleCalendar,
 ): LogLevel | undefined => {
   if (!maybeLevel) {
     return undefined;
@@ -34,8 +34,8 @@ export const parseLogLevel = (
   }
   loggerFor(client).warn(
     `${sourceName} was set to ${JSON.stringify(maybeLevel)}, expected one of ${JSON.stringify(
-      Object.keys(levelNumbers)
-    )}`
+      Object.keys(levelNumbers),
+    )}`,
   );
   return undefined;
 };
@@ -45,7 +45,7 @@ function noop() {}
 function makeLogFn(
   fnLevel: keyof Logger,
   logger: Logger | undefined,
-  logLevel: LogLevel
+  logLevel: LogLevel,
 ) {
   if (!logger || levelNumbers[fnLevel] > levelNumbers[logLevel]) {
     return noop;
@@ -116,7 +116,7 @@ export const formatRequestDetails = (details: {
         name.toLowerCase() === "set-cookie"
           ? "***"
           : value,
-      ])
+      ]),
     );
   }
   if ("retryOfRequestLogID" in details) {

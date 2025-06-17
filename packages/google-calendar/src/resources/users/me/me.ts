@@ -22,7 +22,7 @@ import {
 
 export class Me extends APIResource {
   calendarList: CalendarListAPI.CalendarList = new CalendarListAPI.CalendarList(
-    this._client
+    this._client,
   );
   settings: SettingsAPI.Settings = new SettingsAPI.Settings(this._client);
 }

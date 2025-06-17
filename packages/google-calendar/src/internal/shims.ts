@@ -16,7 +16,7 @@ export function getDefaultFetch(): Fetch {
   }
 
   throw new Error(
-    "`fetch` is not defined as a global; Either pass `fetch` to the client, `new GoogleCalendar({ fetch })` or polyfill the global, `globalThis.fetch = fetch`"
+    "`fetch` is not defined as a global; Either pass `fetch` to the client, `new GoogleCalendar({ fetch })` or polyfill the global, `globalThis.fetch = fetch`",
   );
 }
 
@@ -30,7 +30,7 @@ export function makeReadableStream(
     // Note: All of the platforms / runtimes we officially support already define
     // `ReadableStream` as a global, so this should only ever be hit on unsupported runtimes.
     throw new Error(
-      "`ReadableStream` is not defined as a global; You will need to polyfill it, `globalThis.ReadableStream = ReadableStream`"
+      "`ReadableStream` is not defined as a global; You will need to polyfill it, `globalThis.ReadableStream = ReadableStream`",
     );
   }
 
@@ -38,7 +38,7 @@ export function makeReadableStream(
 }
 
 export function ReadableStreamFrom<T>(
-  iterable: Iterable<T> | AsyncIterable<T>
+  iterable: Iterable<T> | AsyncIterable<T>,
 ): ReadableStream<T> {
   let iter: AsyncIterator<T> | Iterator<T> =
     Symbol.asyncIterator in iterable
@@ -68,7 +68,7 @@ export function ReadableStreamFrom<T>(
  * This polyfill was pulled from https://github.com/MattiasBuelens/web-streams-polyfill/pull/122#issuecomment-1627354490
  */
 export function ReadableStreamToAsyncIterable<T>(
-  stream: any
+  stream: any,
 ): AsyncIterableIterator<T> {
   if (stream[Symbol.asyncIterator]) return stream;
 

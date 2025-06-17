@@ -15,7 +15,7 @@ export const CalendarListEntrySchema = z.object({
       z.object({
         method: z.string(),
         minutes: z.number().int(),
-      })
+      }),
     )
     .optional(),
   deleted: z.boolean().optional(),
@@ -31,7 +31,7 @@ export const CalendarListEntrySchema = z.object({
         z.object({
           method: z.string(),
           type: z.string(),
-        })
+        }),
       ),
     })
     .optional(),

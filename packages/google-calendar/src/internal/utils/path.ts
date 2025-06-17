@@ -1,4 +1,4 @@
-import { GoogleCalendarSDKError } from '../../core/error';
+import { GoogleCalendarSDKError } from "../../core/error";
 
 /**
  * Percent-encode everything that isn't safe to have in a path without encoding safe chars.
@@ -13,7 +13,10 @@ export function encodeURIPath(str: string) {
 }
 
 export const createPathTagFunction = (pathEncoder = encodeURIPath) =>
-  function path(statics: readonly string[], ...params: readonly unknown[]): string {
+  function path(
+    statics: readonly string[],
+    ...params: readonly unknown[]
+  ): string {
     // If there are no params, no processing is needed.
     if (statics.length === 1) return statics[0]!;
 
@@ -25,9 +28,13 @@ export const createPathTagFunction = (pathEncoder = encodeURIPath) =>
       return (
         previousValue +
         currentValue +
-        (index === params.length ? '' : (postPath ? encodeURIComponent : pathEncoder)(String(params[index])))
+        (index === params.length
+          ? ""
+          : (postPath ? encodeURIComponent : pathEncoder)(
+              String(params[index]),
+            ))
       );
-    }, '');
+    }, "");
 
     const pathOnly = path.split(/[?#]/, 1)[0]!;
     const invalidSegments = [];
@@ -45,11 +52,11 @@ export const createPathTagFunction = (pathEncoder = encodeURIPath) =>
     if (invalidSegments.length > 0) {
       let lastEnd = 0;
       const underline = invalidSegments.reduce((acc, segment) => {
-        const spaces = ' '.repeat(segment.start - lastEnd);
-        const arrows = '^'.repeat(segment.length);
+        const spaces = " ".repeat(segment.start - lastEnd);
+        const arrows = "^".repeat(segment.length);
         lastEnd = segment.start + segment.length;
         return acc + spaces + arrows;
-      }, '');
+      }, "");
 
       throw new GoogleCalendarSDKError(
         `Path parameters result in path with invalid segments:\n${path}\n${underline}`,

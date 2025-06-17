@@ -10,7 +10,7 @@ export class FreeBusy extends APIResource {
    */
   checkAvailability(
     body: FreeBusyCheckAvailabilityParams,
-    options?: RequestOptions
+    options?: RequestOptions,
   ): APIPromise<FreeBusyCheckAvailabilityResponse> {
     return this._client.post("/freeBusy", { body, ...options });
   }

@@ -14,7 +14,7 @@ export class Events extends APIResource {
   create(
     calendarID: string,
     params: EventCreateParams,
-    options?: RequestOptions
+    options?: RequestOptions,
   ): APIPromise<Event> {
     const {
       conferenceDataVersion,
@@ -44,7 +44,7 @@ export class Events extends APIResource {
   retrieve(
     eventID: string,
     params: EventRetrieveParams,
-    options?: RequestOptions
+    options?: RequestOptions,
   ): APIPromise<Event> {
     const { calendarId, ...query } = params;
     return this._client.get(path`/calendars/${calendarId}/events/${eventID}`, {
@@ -59,7 +59,7 @@ export class Events extends APIResource {
   update(
     eventID: string,
     params: EventUpdateParams,
-    options?: RequestOptions
+    options?: RequestOptions,
   ): APIPromise<Event> {
     const {
       calendarId,
@@ -91,7 +91,7 @@ export class Events extends APIResource {
   list(
     calendarID: string,
     query: EventListParams | null | undefined = {},
-    options?: RequestOptions
+    options?: RequestOptions,
   ): APIPromise<Events> {
     return this._client.get(path`/calendars/${calendarID}/events`, {
       query,
@@ -105,7 +105,7 @@ export class Events extends APIResource {
   delete(
     eventID: string,
     params: EventDeleteParams,
-    options?: RequestOptions
+    options?: RequestOptions,
   ): APIPromise<void> {
     const { calendarId, sendNotifications, sendUpdates } = params;
     return this._client.delete(
@@ -114,7 +114,7 @@ export class Events extends APIResource {
         query: { sendNotifications, sendUpdates },
         ...options,
         headers: buildHeaders([{ Accept: "*/*" }, options?.headers]),
-      }
+      },
     );
   }
 
@@ -128,7 +128,7 @@ export class Events extends APIResource {
   import(
     calendarID: string,
     params: EventImportParams,
-    options?: RequestOptions
+    options?: RequestOptions,
   ): APIPromise<Event> {
     const { conferenceDataVersion, supportsAttachments, ...body } = params;
     return this._client.post(path`/calendars/${calendarID}/events/import`, {
@@ -144,7 +144,7 @@ export class Events extends APIResource {
   listInstances(
     eventID: string,
     params: EventListInstancesParams,
-    options?: RequestOptions
+    options?: RequestOptions,
   ): APIPromise<Events> {
     const { calendarId, ...query } = params;
     return this._client.get(
@@ -152,7 +152,7 @@ export class Events extends APIResource {
       {
         query,
         ...options,
-      }
+      },
     );
   }
 
@@ -164,7 +164,7 @@ export class Events extends APIResource {
   move(
     eventID: string,
     params: EventMoveParams,
-    options?: RequestOptions
+    options?: RequestOptions,
   ): APIPromise<Event> {
     const { calendarId, destination, sendNotifications, sendUpdates } = params;
     return this._client.post(
@@ -172,7 +172,7 @@ export class Events extends APIResource {
       {
         query: { destination, sendNotifications, sendUpdates },
         ...options,
-      }
+      },
     );
   }
 
@@ -182,7 +182,7 @@ export class Events extends APIResource {
   quickAdd(
     calendarID: string,
     params: EventQuickAddParams,
-    options?: RequestOptions
+    options?: RequestOptions,
   ): APIPromise<Event> {
     const { text, sendNotifications, sendUpdates } = params;
     return this._client.post(path`/calendars/${calendarID}/events/quickAdd`, {
@@ -197,7 +197,7 @@ export class Events extends APIResource {
   updatePartial(
     eventID: string,
     params: EventUpdatePartialParams,
-    options?: RequestOptions
+    options?: RequestOptions,
   ): APIPromise<Event> {
     const {
       calendarId,
@@ -222,7 +222,7 @@ export class Events extends APIResource {
         },
         body,
         ...options,
-      }
+      },
     );
   }
 
@@ -232,7 +232,7 @@ export class Events extends APIResource {
   watch(
     calendarID: string,
     params: EventWatchParams,
-    options?: RequestOptions
+    options?: RequestOptions,
   ): APIPromise<ACLAPI.Channel> {
     const {
       alwaysIncludeEmail,

@@ -37,7 +37,7 @@ export default function Participants() {
       <Button
         size="icon"
         variant="outline"
-        className="flex size-6 items-center justify-center rounded-full text-xs ring-1 ring-background border-transparent shadow-none text-muted-foreground/80 dark:bg-background dark:hover:bg-background dark:border-transparent"
+        className="ring-background text-muted-foreground/80 dark:bg-background dark:hover:bg-background flex size-6 items-center justify-center rounded-full border-transparent text-xs shadow-none ring-1 dark:border-transparent"
       >
         <RiMoreFill size={16} className="size-4" />
       </Button>

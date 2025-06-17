@@ -6,12 +6,12 @@ export {
   type CalendarCreateParams,
   type CalendarUpdateParams,
   type CalendarUpdatePartialParams,
-} from './calendars/calendars';
-export { Channels, type ChannelStopWatchingParams } from './channels';
-export { Colors, type ColorListResponse } from './colors';
+} from "./calendars/calendars";
+export { Channels, type ChannelStopWatchingParams } from "./channels";
+export { Colors, type ColorListResponse } from "./colors";
 export {
   FreeBusy,
   type FreeBusyCheckAvailabilityResponse,
   type FreeBusyCheckAvailabilityParams,
-} from './free-busy';
-export { Users } from './users/users';
+} from "./free-busy";
+export { Users } from "./users/users";

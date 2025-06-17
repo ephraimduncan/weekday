@@ -32,12 +32,12 @@ const betterAuth = betterAuthClient({
             } catch (error) {
               console.error(
                 `❌ Failed to remove problematic account ${account.id}:`,
-                error
+                error,
               );
             }
           } else if (account.providerId === "google" && account.refreshToken) {
             console.log(
-              `✅ Google account created successfully with refresh token for user ${account.userId}`
+              `✅ Google account created successfully with refresh token for user ${account.userId}`,
             );
           }
         },

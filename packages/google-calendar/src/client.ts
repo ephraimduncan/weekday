@@ -191,7 +191,7 @@ export class GoogleCalendar {
       parseLogLevel(
         readEnv("GOOGLE_CALENDAR_SDK_LOG"),
         "process.env['GOOGLE_CALENDAR_SDK_LOG']",
-        this
+        this,
       ) ??
       defaultLogLevel;
     this.fetchOptions = options.fetchOptions;
@@ -209,7 +209,7 @@ export class GoogleCalendar {
    */
   withOptions(options: Partial<ClientOptions>): this {
     return new (this.constructor as any as new (
-      props: ClientOptions
+      props: ClientOptions,
     ) => typeof this)({
       ...this._options,
       baseURL: this.baseURL,
@@ -236,12 +236,12 @@ export class GoogleCalendar {
     }
 
     throw new Error(
-      'Could not resolve authentication method. Expected the apiKey to be set. Or for the "Authorization" headers to be explicitly omitted'
+      'Could not resolve authentication method. Expected the apiKey to be set. Or for the "Authorization" headers to be explicitly omitted',
     );
   }
 
   protected authHeaders(
-    opts: FinalRequestOptions
+    opts: FinalRequestOptions,
   ): NullableHeaders | undefined {
     if (this.apiKey == null) {
       return undefined;
@@ -267,7 +267,7 @@ export class GoogleCalendar {
           return `${encodeURIComponent(key)}=`;
         }
         throw new Errors.GoogleCalendarSDKError(
-          `Cannot stringify type ${typeof value}; Expected string, number, boolean, or null. If you need to pass nested query parameters, you can manually encode them, e.g. { query: { 'foo[key1]': value1, 'foo[key2]': value2 } }, and please open a GitHub issue requesting better support for your use case.`
+          `Cannot stringify type ${typeof value}; Expected string, number, boolean, or null. If you need to pass nested query parameters, you can manually encode them, e.g. { query: { 'foo[key1]': value1, 'foo[key2]': value2 } }, and please open a GitHub issue requesting better support for your use case.`,
         );
       })
       .join("&");
@@ -285,14 +285,14 @@ export class GoogleCalendar {
     status: number,
     error: Object,
     message: string | undefined,
-    headers: Headers
+    headers: Headers,
   ): Errors.APIError {
     return Errors.APIError.generate(status, error, message, headers);
   }
 
   buildURL(
     path: string,
-    query: Record<string, unknown> | null | undefined
+    query: Record<string, unknown> | null | undefined,
   ): string {
     const url = isAbsoluteURL(path)
       ? new URL(path)
@@ -300,7 +300,7 @@ export class GoogleCalendar {
           this.baseURL +
             (this.baseURL.endsWith("/") && path.startsWith("/")
               ? path.slice(1)
-              : path)
+              : path),
         );
 
     const defaultQuery = this.defaultQuery();
@@ -328,40 +328,40 @@ export class GoogleCalendar {
    */
   protected async prepareRequest(
     request: RequestInit,
-    { url, options }: { url: string; options: FinalRequestOptions }
+    { url, options }: { url: string; options: FinalRequestOptions },
   ): Promise<void> {}
 
   get<Rsp>(
     path: string,
-    opts?: PromiseOrValue<RequestOptions>
+    opts?: PromiseOrValue<RequestOptions>,
   ): APIPromise<Rsp> {
     return this.methodRequest("get", path, opts);
   }
 
   post<Rsp>(
     path: string,
-    opts?: PromiseOrValue<RequestOptions>
+    opts?: PromiseOrValue<RequestOptions>,
   ): APIPromise<Rsp> {
     return this.methodRequest("post", path, opts);
   }
 
   patch<Rsp>(
     path: string,
-    opts?: PromiseOrValue<RequestOptions>
+    opts?: PromiseOrValue<RequestOptions>,
   ): APIPromise<Rsp> {
     return this.methodRequest("patch", path, opts);
   }
 
   put<Rsp>(
     path: string,
-    opts?: PromiseOrValue<RequestOptions>
+    opts?: PromiseOrValue<RequestOptions>,
   ): APIPromise<Rsp> {
     return this.methodRequest("put", path, opts);
   }
 
   delete<Rsp>(
     path: string,
-    opts?: PromiseOrValue<RequestOptions>
+    opts?: PromiseOrValue<RequestOptions>,
   ): APIPromise<Rsp> {
     return this.methodRequest("delete", path, opts);
   }
@@ -369,29 +369,29 @@ export class GoogleCalendar {
   private methodRequest<Rsp>(
     method: HTTPMethod,
     path: string,
-    opts?: PromiseOrValue<RequestOptions>
+    opts?: PromiseOrValue<RequestOptions>,
   ): APIPromise<Rsp> {
     return this.request(
       Promise.resolve(opts).then((opts) => {
         return { method, path, ...opts };
-      })
+      }),
     );
   }
 
   request<Rsp>(
     options: PromiseOrValue<FinalRequestOptions>,
-    remainingRetries: number | null = null
+    remainingRetries: number | null = null,
   ): APIPromise<Rsp> {
     return new APIPromise(
       this,
-      this.makeRequest(options, remainingRetries, undefined)
+      this.makeRequest(options, remainingRetries, undefined),
     );
   }
 
   private async makeRequest(
     optionsInput: PromiseOrValue<FinalRequestOptions>,
     retriesRemaining: number | null,
-    retryOfRequestLogID: string | undefined
+    retryOfRequestLogID: string | undefined,
   ): Promise<APIResponseProps> {
     const options = await optionsInput;
     const maxRetries = options.maxRetries ?? this.maxRetries;
@@ -424,7 +424,7 @@ export class GoogleCalendar {
         url,
         options,
         headers: req.headers,
-      })
+      }),
     );
 
     if (options.signal?.aborted) {
@@ -436,7 +436,7 @@ export class GoogleCalendar {
       url,
       req,
       timeout,
-      controller
+      controller,
     ).catch(castToError);
     const headersTime = Date.now();
 
@@ -452,11 +452,12 @@ export class GoogleCalendar {
       const isTimeout =
         isAbortError(response) ||
         /timed? ?out/i.test(
-          String(response) + ("cause" in response ? String(response.cause) : "")
+          String(response) +
+            ("cause" in response ? String(response.cause) : ""),
         );
       if (retriesRemaining) {
         loggerFor(this).info(
-          `[${requestLogID}] connection ${isTimeout ? "timed out" : "failed"} - ${retryMessage}`
+          `[${requestLogID}] connection ${isTimeout ? "timed out" : "failed"} - ${retryMessage}`,
         );
         loggerFor(this).debug(
           `[${requestLogID}] connection ${isTimeout ? "timed out" : "failed"} (${retryMessage})`,
@@ -465,16 +466,16 @@ export class GoogleCalendar {
             url,
             durationMs: headersTime - startTime,
             message: response.message,
-          })
+          }),
         );
         return this.retryRequest(
           options,
           retriesRemaining,
-          retryOfRequestLogID ?? requestLogID
+          retryOfRequestLogID ?? requestLogID,
         );
       }
       loggerFor(this).info(
-        `[${requestLogID}] connection ${isTimeout ? "timed out" : "failed"} - error; no more retries left`
+        `[${requestLogID}] connection ${isTimeout ? "timed out" : "failed"} - error; no more retries left`,
       );
       loggerFor(this).debug(
         `[${requestLogID}] connection ${isTimeout ? "timed out" : "failed"} (error; no more retries left)`,
@@ -483,7 +484,7 @@ export class GoogleCalendar {
           url,
           durationMs: headersTime - startTime,
           message: response.message,
-        })
+        }),
       );
       if (isTimeout) {
         throw new Errors.APIConnectionTimeoutError();
@@ -511,13 +512,13 @@ export class GoogleCalendar {
             status: response.status,
             headers: response.headers,
             durationMs: headersTime - startTime,
-          })
+          }),
         );
         return this.retryRequest(
           options,
           retriesRemaining,
           retryOfRequestLogID ?? requestLogID,
-          response.headers
+          response.headers,
         );
       }
 
@@ -542,14 +543,14 @@ export class GoogleCalendar {
           headers: response.headers,
           message: errMessage,
           durationMs: Date.now() - startTime,
-        })
+        }),
       );
 
       const err = this.makeStatusError(
         response.status,
         errJSON,
         errMessage,
-        response.headers
+        response.headers,
       );
       throw err;
     }
@@ -563,7 +564,7 @@ export class GoogleCalendar {
         status: response.status,
         headers: response.headers,
         durationMs: headersTime - startTime,
-      })
+      }),
     );
 
     return {
@@ -580,7 +581,7 @@ export class GoogleCalendar {
     url: RequestInfo,
     init: RequestInit | undefined,
     ms: number,
-    controller: AbortController
+    controller: AbortController,
   ): Promise<Response> {
     const { signal, method, ...options } = init || {};
     if (signal) signal.addEventListener("abort", () => controller.abort());
@@ -641,7 +642,7 @@ export class GoogleCalendar {
     options: FinalRequestOptions,
     retriesRemaining: number,
     requestLogID: string,
-    responseHeaders?: Headers | undefined
+    responseHeaders?: Headers | undefined,
   ): Promise<APIResponseProps> {
     let timeoutMillis: number | undefined;
 
@@ -671,7 +672,7 @@ export class GoogleCalendar {
       const maxRetries = options.maxRetries ?? this.maxRetries;
       timeoutMillis = this.calculateDefaultRetryTimeoutMillis(
         retriesRemaining,
-        maxRetries
+        maxRetries,
       );
     }
     await sleep(timeoutMillis);
@@ -681,7 +682,7 @@ export class GoogleCalendar {
 
   private calculateDefaultRetryTimeoutMillis(
     retriesRemaining: number,
-    maxRetries: number
+    maxRetries: number,
   ): number {
     const initialRetryDelay = 0.5;
     const maxRetryDelay = 8.0;
@@ -691,7 +692,7 @@ export class GoogleCalendar {
     // Apply exponential backoff, but not more than the max.
     const sleepSeconds = Math.min(
       initialRetryDelay * Math.pow(2, numRetries),
-      maxRetryDelay
+      maxRetryDelay,
     );
 
     // Apply some jitter, take up to at most 25 percent of the retry time.
@@ -702,7 +703,7 @@ export class GoogleCalendar {
 
   buildRequest(
     inputOptions: FinalRequestOptions,
-    { retryCount = 0 }: { retryCount?: number } = {}
+    { retryCount = 0 }: { retryCount?: number } = {},
   ): { req: FinalizedRequestInit; url: string; timeout: number } {
     const options = { ...inputOptions };
     const { method, path, query } = options;
@@ -891,7 +892,7 @@ export class RefreshableGoogleCalendar extends GoogleCalendar {
       db: DrizzleClient;
       userId: string;
       refreshTokenCallback?: (newAccessToken: string) => Promise<void>;
-    }
+    },
   ) {
     const { db, userId, refreshTokenCallback, ...clientOptions } = options;
     super(clientOptions);
@@ -901,7 +902,7 @@ export class RefreshableGoogleCalendar extends GoogleCalendar {
   }
 
   private async refreshTokenIfNeeded(
-    response: Response
+    response: Response,
   ): Promise<string | null> {
     if (response.status !== 401) {
       return this.apiKey;
@@ -913,12 +914,12 @@ export class RefreshableGoogleCalendar extends GoogleCalendar {
         console.error(
           `No refresh token available for account: ${account.id}. ` +
             `This usually means the user needs to re-authenticate to grant offline access. ` +
-            `The user should log out and log back in to refresh their authentication.`
+            `The user should log out and log back in to refresh their authentication.`,
         );
         // Throw a specific error that can be caught upstream.
         const authError = new Error(
           "Authentication has expired and cannot be refreshed automatically. " +
-            "Please sign out and sign back in to re-authenticate."
+            "Please sign out and sign back in to re-authenticate.",
         );
         authError.name = "AuthenticationExpiredError";
         throw authError;
@@ -926,7 +927,7 @@ export class RefreshableGoogleCalendar extends GoogleCalendar {
 
       console.log(
         "Access token expired, refreshing via Better Auth for account:",
-        account.id
+        account.id,
       );
 
       const { authInstance } = await import("@weekday/auth");
@@ -946,7 +947,7 @@ export class RefreshableGoogleCalendar extends GoogleCalendar {
 
       console.log(
         "Token refreshed successfully, new token length:",
-        refreshedAccount.accessToken.length
+        refreshedAccount.accessToken.length,
       );
 
       // Update the instance's API key
@@ -984,27 +985,27 @@ export class RefreshableGoogleCalendar extends GoogleCalendar {
 
   override request<Rsp>(
     options: PromiseOrValue<FinalRequestOptions>,
-    remainingRetries: number | null = null
+    remainingRetries: number | null = null,
   ): APIPromise<Rsp> {
     // Set default retries to 2 if not provided to allow for token refresh
     const retries = remainingRetries ?? this.maxRetries ?? 2;
 
     return new APIPromise(
       this,
-      this.makeRequestWithRefresh(options, retries, undefined)
+      this.makeRequestWithRefresh(options, retries, undefined),
     );
   }
 
   private async makeRequestWithRefresh(
     optionsInput: PromiseOrValue<FinalRequestOptions>,
     retriesRemaining: number | null,
-    retryOfRequestLogID: string | undefined
+    retryOfRequestLogID: string | undefined,
   ): Promise<APIResponseProps> {
     try {
       return await (this as any).makeRequest(
         optionsInput,
         retriesRemaining,
-        retryOfRequestLogID
+        retryOfRequestLogID,
       );
     } catch (error: any) {
       if (
@@ -1014,7 +1015,7 @@ export class RefreshableGoogleCalendar extends GoogleCalendar {
       ) {
         console.log(
           "Received 401 error, attempting token refresh. Retries remaining:",
-          retriesRemaining
+          retriesRemaining,
         );
 
         try {
@@ -1029,11 +1030,11 @@ export class RefreshableGoogleCalendar extends GoogleCalendar {
             return await (this as any).makeRequest(
               optionsInput,
               retriesRemaining - 1,
-              retryOfRequestLogID
+              retryOfRequestLogID,
             );
           } else {
             console.log(
-              "Token refresh failed or returned same token, not retrying"
+              "Token refresh failed or returned same token, not retrying",
             );
           }
         } catch (refreshError: any) {

@@ -11,7 +11,7 @@ export class Channels extends APIResource {
    */
   stopWatching(
     body: ChannelStopWatchingParams,
-    options?: RequestOptions
+    options?: RequestOptions,
   ): APIPromise<void> {
     return this._client.post("/channels/stop", {
       body,

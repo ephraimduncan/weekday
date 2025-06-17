@@ -9,7 +9,7 @@ export type HeadersLike =
   | null
   | NullableHeaders;
 
-const brand_privateNullableHeaders = Symbol('brand.privateNullableHeaders');
+const brand_privateNullableHeaders = Symbol("brand.privateNullableHeaders");
 
 /**
  * @internal
@@ -27,7 +27,9 @@ export type NullableHeaders = {
 
 const isArray = Array.isArray as (val: unknown) => val is readonly unknown[];
 
-function* iterateHeaders(headers: HeadersLike): IterableIterator<readonly [string, string | null]> {
+function* iterateHeaders(
+  headers: HeadersLike,
+): IterableIterator<readonly [string, string | null]> {
   if (!headers) return;
 
   if (brand_privateNullableHeaders in headers) {
@@ -51,7 +53,8 @@ function* iterateHeaders(headers: HeadersLike): IterableIterator<readonly [strin
   }
   for (let row of iter) {
     const name = row[0];
-    if (typeof name !== 'string') throw new TypeError('expected header name to be a string');
+    if (typeof name !== "string")
+      throw new TypeError("expected header name to be a string");
     const values = isArray(row[1]) ? row[1] : [row[1]];
     let didClear = false;
     for (const value of values) {
@@ -88,7 +91,11 @@ export const buildHeaders = (newHeaders: HeadersLike[]): NullableHeaders => {
       }
     }
   }
-  return { [brand_privateNullableHeaders]: true, values: targetHeaders, nulls: nullHeaders };
+  return {
+    [brand_privateNullableHeaders]: true,
+    values: targetHeaders,
+    nulls: nullHeaders,
+  };
 };
 
 export const isEmptyHeaders = (headers: HeadersLike) => {

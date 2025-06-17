@@ -15,7 +15,7 @@ export type APIResponseProps = {
 
 export async function defaultParseResponse<T>(
   client: GoogleCalendar,
-  props: APIResponseProps
+  props: APIResponseProps,
 ): Promise<T> {
   const { response, requestLogID, retryOfRequestLogID, startTime } = props;
   const body = await (async () => {
@@ -48,7 +48,7 @@ export async function defaultParseResponse<T>(
       status: response.status,
       body,
       durationMs: Date.now() - startTime,
-    })
+    }),
   );
   return body;
 }

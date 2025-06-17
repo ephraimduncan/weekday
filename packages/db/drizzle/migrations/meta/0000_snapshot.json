@@ -93,12 +93,8 @@
           "name": "weekday_account_user_id_weekday_user_id_fk",
           "tableFrom": "weekday_account",
           "tableTo": "weekday_user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -174,12 +170,8 @@
           "name": "weekday_session_user_id_weekday_user_id_fk",
           "tableFrom": "weekday_session",
           "tableTo": "weekday_user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -189,9 +181,7 @@
         "weekday_session_token_unique": {
           "name": "weekday_session_token_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "token"
-          ]
+          "columns": ["token"]
         }
       },
       "policies": {},
@@ -283,9 +273,7 @@
         "weekday_user_email_unique": {
           "name": "weekday_user_email_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "email"
-          ]
+          "columns": ["email"]
         }
       },
       "policies": {},

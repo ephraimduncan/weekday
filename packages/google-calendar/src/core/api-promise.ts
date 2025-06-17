@@ -18,8 +18,8 @@ export class APIPromise<T> extends Promise<T> {
     private responsePromise: Promise<APIResponseProps>,
     private parseResponse: (
       client: GoogleCalendar,
-      props: APIResponseProps
-    ) => PromiseOrValue<T> = defaultParseResponse
+      props: APIResponseProps,
+    ) => PromiseOrValue<T> = defaultParseResponse,
   ) {
     super((resolve) => {
       // this is maybe a bit weird but this has to be a no-op to not implicitly
@@ -31,13 +31,13 @@ export class APIPromise<T> extends Promise<T> {
   }
 
   _thenUnwrap<U>(
-    transform: (data: T, props: APIResponseProps) => U
+    transform: (data: T, props: APIResponseProps) => U,
   ): APIPromise<U> {
     return new APIPromise(
       this.#client,
       this.responsePromise,
       async (client, props) =>
-        transform(await this.parseResponse(client, props), props)
+        transform(await this.parseResponse(client, props), props),
     );
   }
 
@@ -77,7 +77,7 @@ export class APIPromise<T> extends Promise<T> {
   private parse(): Promise<T> {
     if (!this.parsedPromise) {
       this.parsedPromise = this.responsePromise.then((data) =>
-        this.parseResponse(this.#client, data)
+        this.parseResponse(this.#client, data),
       );
     }
     return this.parsedPromise;
@@ -91,7 +91,7 @@ export class APIPromise<T> extends Promise<T> {
     onrejected?:
       | ((reason: any) => TResult2 | PromiseLike<TResult2>)
       | undefined
-      | null
+      | null,
   ): Promise<TResult1 | TResult2> {
     return this.parse().then(onfulfilled, onrejected);
   }
@@ -100,7 +100,7 @@ export class APIPromise<T> extends Promise<T> {
     onrejected?:
       | ((reason: any) => TResult | PromiseLike<TResult>)
       | undefined
-      | null
+      | null,
   ): Promise<T | TResult> {
     return this.parse().catch(onrejected);
   }

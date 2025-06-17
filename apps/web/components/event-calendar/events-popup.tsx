@@ -10,7 +10,7 @@ import { type CalendarEvent, EventItem } from "@/components/event-calendar";
 interface EventsPopupProps {
   date: Date;
   events: CalendarEvent[];
-  position: { left: number; top: number; };
+  position: { left: number; top: number };
   onClose: () => void;
   onEventSelect: (event: CalendarEvent) => void;
 }

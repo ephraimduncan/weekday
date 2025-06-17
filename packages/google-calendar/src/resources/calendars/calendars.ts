@@ -45,7 +45,7 @@ export class Calendars extends APIResource {
    */
   create(
     body: CalendarCreateParams,
-    options?: RequestOptions
+    options?: RequestOptions,
   ): APIPromise<Calendar> {
     return this._client.post("/calendars", { body, ...options });
   }
@@ -63,7 +63,7 @@ export class Calendars extends APIResource {
   update(
     calendarID: string,
     body: CalendarUpdateParams,
-    options?: RequestOptions
+    options?: RequestOptions,
   ): APIPromise<Calendar> {
     return this._client.put(path`/calendars/${calendarID}`, {
       body,
@@ -99,7 +99,7 @@ export class Calendars extends APIResource {
   updatePartial(
     calendarID: string,
     body: CalendarUpdatePartialParams,
-    options?: RequestOptions
+    options?: RequestOptions,
   ): APIPromise<Calendar> {
     return this._client.patch(path`/calendars/${calendarID}`, {
       body,

@@ -15,7 +15,7 @@ export const user = createTable("user", {
   banExpires: timestamp("ban_expires"),
   createdAt: timestamp("created_at").notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).$onUpdate(
-    () => new Date()
+    () => new Date(),
   ),
 });
 
@@ -25,7 +25,7 @@ export const session = createTable("session", {
   token: text("token").notNull().unique(),
   createdAt: timestamp("created_at").notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).$onUpdate(
-    () => new Date()
+    () => new Date(),
   ),
   ipAddress: text("ip_address"),
   userAgent: text("user_agent"),
@@ -51,7 +51,7 @@ export const account = createTable("account", {
   password: text("password"),
   createdAt: timestamp("created_at").notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).$onUpdate(
-    () => new Date()
+    () => new Date(),
   ),
 });
 
@@ -62,6 +62,6 @@ export const verification = createTable("verification", {
   expiresAt: timestamp("expires_at").notNull(),
   createdAt: timestamp("created_at"),
   updatedAt: timestamp("updated_at", { withTimezone: true }).$onUpdate(
-    () => new Date()
+    () => new Date(),
   ),
 });

@@ -23,7 +23,7 @@ export const checkFileSupport = () => {
       "`File` is not defined as a global, which is required for file uploads." +
         (isOldNode
           ? " Update to Node 20 LTS or newer, or set `globalThis.File` to `import('node:buffer').File`."
-          : "")
+          : ""),
     );
   }
 };
@@ -46,7 +46,7 @@ export type Uploadable = File | Response | FsReadStream | BunFile;
 export function makeFile(
   fileBits: BlobPart[],
   fileName: string | undefined,
-  options?: FilePropertyBag
+  options?: FilePropertyBag,
 ): File {
   checkFileSupport();
   return new File(fileBits as any, fileName ?? "unknown_file", options);
@@ -79,7 +79,7 @@ export const isAsyncIterable = (value: any): value is AsyncIterable<any> =>
  */
 export const maybeMultipartFormRequestOptions = async (
   opts: RequestOptions,
-  fetch: GoogleCalendar | Fetch
+  fetch: GoogleCalendar | Fetch,
 ): Promise<RequestOptions> => {
   if (!hasUploadableValue(opts.body)) return opts;
 
@@ -92,7 +92,7 @@ type MultipartFormRequestOptions = Omit<RequestOptions, "body"> & {
 
 export const multipartFormRequestOptions = async (
   opts: MultipartFormRequestOptions,
-  fetch: GoogleCalendar | Fetch
+  fetch: GoogleCalendar | Fetch,
 ): Promise<RequestOptions> => {
   return { ...opts, body: await createForm(opts.body, fetch) };
 };
@@ -106,7 +106,7 @@ const supportsFormDataMap = new WeakMap<Fetch, Promise<boolean>>();
  * confusing error messages later on.
  */
 function supportsFormData(
-  fetchObject: GoogleCalendar | Fetch
+  fetchObject: GoogleCalendar | Fetch,
 ): Promise<boolean> {
   const fetch: Fetch =
     typeof fetchObject === "function"
@@ -137,18 +137,18 @@ function supportsFormData(
 
 export const createForm = async <T = Record<string, unknown>>(
   body: T | undefined,
-  fetch: GoogleCalendar | Fetch
+  fetch: GoogleCalendar | Fetch,
 ): Promise<FormData> => {
   if (!(await supportsFormData(fetch))) {
     throw new TypeError(
-      "The provided fetch function does not support file uploads with the current global FormData class."
+      "The provided fetch function does not support file uploads with the current global FormData class.",
     );
   }
   const form = new FormData();
   await Promise.all(
     Object.entries(body || {}).map(([key, value]) =>
-      addFormValue(form, key, value)
-    )
+      addFormValue(form, key, value),
+    ),
   );
   return form;
 };
@@ -176,12 +176,12 @@ const hasUploadableValue = (value: unknown): boolean => {
 const addFormValue = async (
   form: FormData,
   key: string,
-  value: unknown
+  value: unknown,
 ): Promise<void> => {
   if (value === undefined) return;
   if (value == null) {
     throw new TypeError(
-      `Received null for "${key}"; to pass null in FormData, you must use the string 'null'`
+      `Received null for "${key}"; to pass null in FormData, you must use the string 'null'`,
     );
   }
 
@@ -199,24 +199,24 @@ const addFormValue = async (
       key,
       makeFile(
         [await new Response(ReadableStreamFrom(value)).blob()],
-        getName(value)
-      )
+        getName(value),
+      ),
     );
   } else if (isNamedBlob(value)) {
     form.append(key, value, getName(value));
   } else if (Array.isArray(value)) {
     await Promise.all(
-      value.map((entry) => addFormValue(form, key + "[]", entry))
+      value.map((entry) => addFormValue(form, key + "[]", entry)),
     );
   } else if (typeof value === "object") {
     await Promise.all(
       Object.entries(value).map(([name, prop]) =>
-        addFormValue(form, `${key}[${name}]`, prop)
-      )
+        addFormValue(form, `${key}[${name}]`, prop),
+      ),
     );
   } else {
     throw new TypeError(
-      `Invalid value given to form, expected a string, number, boolean, object, Array, File or Blob but got ${value} instead`
+      `Invalid value given to form, expected a string, number, boolean, object, Array, File or Blob but got ${value} instead`,
     );
   }
 };

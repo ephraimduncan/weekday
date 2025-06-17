@@ -33,7 +33,7 @@ interface BlobLike {
  * This check adds the arrayBuffer() method type because it is available and used at runtime
  */
 const isBlobLike = (
-  value: any
+  value: any,
 ): value is BlobLike & { arrayBuffer(): Promise<ArrayBuffer> } =>
   value != null &&
   typeof value === "object" &&
@@ -57,7 +57,7 @@ interface FileLike extends BlobLike {
  * This check adds the arrayBuffer() method type because it is available and used at runtime
  */
 const isFileLike = (
-  value: any
+  value: any,
 ): value is FileLike & { arrayBuffer(): Promise<ArrayBuffer> } =>
   value != null &&
   typeof value === "object" &&
@@ -97,7 +97,7 @@ export type ToFileInput =
 export async function toFile(
   value: ToFileInput | PromiseLike<ToFileInput>,
   name?: string | null | undefined,
-  options?: FilePropertyBag | undefined
+  options?: FilePropertyBag | undefined,
 ): Promise<File> {
   checkFileSupport();
 
@@ -125,7 +125,7 @@ export async function toFile(
 
   if (!options?.type) {
     const type = parts.find(
-      (part) => typeof part === "object" && "type" in part && part.type
+      (part) => typeof part === "object" && "type" in part && part.type,
     );
     if (typeof type === "string") {
       options = { ...options, type };
@@ -136,7 +136,7 @@ export async function toFile(
 }
 
 async function getBytes(
-  value: BlobLikePart | AsyncIterable<BlobLikePart>
+  value: BlobLikePart | AsyncIterable<BlobLikePart>,
 ): Promise<Array<BlobPart>> {
   let parts: Array<BlobPart> = [];
   if (
@@ -158,7 +158,7 @@ async function getBytes(
     throw new Error(
       `Unexpected data type: ${typeof value}${
         constructor ? `; constructor: ${constructor}` : ""
-      }${propsForError(value)}`
+      }${propsForError(value)}`,
     );
   }
 

@@ -12,7 +12,7 @@ export class Settings extends APIResource {
    */
   retrieve(
     setting: string,
-    options?: RequestOptions
+    options?: RequestOptions,
   ): APIPromise<SettingRetrieveResponse> {
     return this._client.get(path`/users/me/settings/${setting}`, options);
   }
@@ -22,7 +22,7 @@ export class Settings extends APIResource {
    */
   list(
     query: SettingListParams | null | undefined = {},
-    options?: RequestOptions
+    options?: RequestOptions,
   ): APIPromise<SettingListResponse> {
     return this._client.get("/users/me/settings", { query, ...options });
   }
@@ -32,7 +32,7 @@ export class Settings extends APIResource {
    */
   watch(
     params: SettingWatchParams,
-    options?: RequestOptions
+    options?: RequestOptions,
   ): APIPromise<ACLAPI.Channel> {
     const { maxResults, pageToken, syncToken, ...body } = params;
     return this._client.post("/users/me/settings/watch", {

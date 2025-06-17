@@ -46,7 +46,7 @@ export const ProcessedCalendarEventSchema = z.object({
           .optional(),
         comment: z.string().optional(),
         additionalGuests: z.number().optional(),
-      })
+      }),
     )
     .optional(),
 });
@@ -59,7 +59,7 @@ export type Account = {
 
 export async function getGoogleAccount(
   db: DrizzleClient,
-  userId: string
+  userId: string,
 ): Promise<Account> {
   const accountRecord = await db
     .select({
@@ -81,7 +81,7 @@ export async function getGoogleAccount(
 
 export function processEventData(
   item: GoogleCalendarEvent,
-  calendarId: string
+  calendarId: string,
 ): z.infer<typeof ProcessedCalendarEventSchema> {
   const eventItem = item as any;
 
@@ -95,7 +95,7 @@ export function processEventData(
 
   if (!startStr || !endStr || !eventItem.id) {
     throw new Error(
-      "Event is missing required start/end time or id information"
+      "Event is missing required start/end time or id information",
     );
   }
 
@@ -165,7 +165,7 @@ export function prepareEventData(
     title?: string;
   },
   currentEvent?: GoogleCalendarEvent,
-  timeZone?: string
+  timeZone?: string,
 ): Record<string, any> {
   const eventData: Record<string, any> = { ...currentEvent };
 
@@ -217,7 +217,7 @@ export function prepareEventData(
 }
 
 export function mergeAndSortBusyIntervals(
-  rawIntervals: Array<{ end: string; start: string }>
+  rawIntervals: Array<{ end: string; start: string }>,
 ): Array<{ end: Date; start: Date }> {
   if (!rawIntervals || rawIntervals.length === 0) {
     return [];
@@ -253,7 +253,7 @@ export function mergeAndSortBusyIntervals(
 export function calculateFreeSlotsFromBusy(
   busyIntervals: Array<{ end: Date; start: Date }>,
   queryStartTime: Date,
-  queryEndTime: Date
+  queryEndTime: Date,
 ): Array<{ end: Date; start: Date }> {
   const freeSlots: Array<{ end: Date; start: Date }> = [];
   let currentFreeStart = queryStartTime;
@@ -261,14 +261,14 @@ export function calculateFreeSlotsFromBusy(
   for (const busyPeriod of busyIntervals) {
     if (currentFreeStart < busyPeriod.start) {
       const slotEnd = new Date(
-        Math.min(busyPeriod.start.getTime(), queryEndTime.getTime())
+        Math.min(busyPeriod.start.getTime(), queryEndTime.getTime()),
       );
       if (currentFreeStart < slotEnd) {
         freeSlots.push({ end: slotEnd, start: currentFreeStart });
       }
     }
     currentFreeStart = new Date(
-      Math.max(currentFreeStart.getTime(), busyPeriod.end.getTime())
+      Math.max(currentFreeStart.getTime(), busyPeriod.end.getTime()),
     );
     if (currentFreeStart >= queryEndTime) {
       break;
@@ -284,7 +284,7 @@ export function calculateFreeSlotsFromBusy(
 
 export function convertRecurrenceToRRule(
   recurrenceType: "none" | "daily" | "weekly" | "monthly" | "yearly",
-  startDate: Date
+  startDate: Date,
 ): string[] | undefined {
   if (recurrenceType === "none") {
     return undefined;

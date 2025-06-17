@@ -21,8 +21,12 @@ type HasProperties<T> = keyof T extends never ? false : true;
 // @ts-ignore
 type _ReadableStream<R = any> =
   // @ts-ignore
-  HasProperties<NodeJS.ReadableStream> extends true ? NodeJS.ReadableStream<R> : ReadableStream<R>;
+  HasProperties<NodeJS.ReadableStream> extends true
+    ? NodeJS.ReadableStream<R>
+    : ReadableStream<R>;
 
 // @ts-ignore
-declare const _ReadableStream: unknown extends typeof ReadableStream ? never : typeof ReadableStream;
+declare const _ReadableStream: unknown extends typeof ReadableStream
+  ? never
+  : typeof ReadableStream;
 export { _ReadableStream as ReadableStream };

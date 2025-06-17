@@ -13,7 +13,7 @@ export class ACL extends APIResource {
   createRule(
     calendarID: string,
     params: ACLCreateRuleParams,
-    options?: RequestOptions
+    options?: RequestOptions,
   ): APIPromise<ACLRule> {
     const { sendNotifications, ...body } = params;
     return this._client.post(path`/calendars/${calendarID}/acl`, {
@@ -29,7 +29,7 @@ export class ACL extends APIResource {
   deleteRule(
     ruleID: string,
     params: ACLDeleteRuleParams,
-    options?: RequestOptions
+    options?: RequestOptions,
   ): APIPromise<void> {
     const { calendarId } = params;
     return this._client.delete(path`/calendars/${calendarId}/acl/${ruleID}`, {
@@ -44,7 +44,7 @@ export class ACL extends APIResource {
   listRules(
     calendarID: string,
     query: ACLListRulesParams | null | undefined = {},
-    options?: RequestOptions
+    options?: RequestOptions,
   ): APIPromise<ACLListRulesResponse> {
     return this._client.get(path`/calendars/${calendarID}/acl`, {
       query,
@@ -58,12 +58,12 @@ export class ACL extends APIResource {
   retrieveRule(
     ruleID: string,
     params: ACLRetrieveRuleParams,
-    options?: RequestOptions
+    options?: RequestOptions,
   ): APIPromise<ACLRule> {
     const { calendarId } = params;
     return this._client.get(
       path`/calendars/${calendarId}/acl/${ruleID}`,
-      options
+      options,
     );
   }
 
@@ -73,7 +73,7 @@ export class ACL extends APIResource {
   updateRule(
     ruleID: string,
     params: ACLUpdateRuleParams,
-    options?: RequestOptions
+    options?: RequestOptions,
   ): APIPromise<ACLRule> {
     const { calendarId, sendNotifications, ...body } = params;
     return this._client.patch(path`/calendars/${calendarId}/acl/${ruleID}`, {
@@ -89,7 +89,7 @@ export class ACL extends APIResource {
   updateRuleFull(
     ruleID: string,
     params: ACLUpdateRuleFullParams,
-    options?: RequestOptions
+    options?: RequestOptions,
   ): APIPromise<ACLRule> {
     const { calendarId, sendNotifications, ...body } = params;
     return this._client.put(path`/calendars/${calendarId}/acl/${ruleID}`, {
@@ -105,7 +105,7 @@ export class ACL extends APIResource {
   watchRules(
     calendarID: string,
     params: ACLWatchRulesParams,
-    options?: RequestOptions
+    options?: RequestOptions,
   ): APIPromise<Channel> {
     const { maxResults, pageToken, showDeleted, syncToken, ...body } = params;
     return this._client.post(path`/calendars/${calendarID}/acl/watch`, {

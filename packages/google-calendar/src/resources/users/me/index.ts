@@ -8,12 +8,12 @@ export {
   type CalendarListUpdateParams,
   type CalendarListListParams,
   type CalendarListWatchParams,
-} from './calendar-list';
-export { Me } from './me';
+} from "./calendar-list";
+export { Me } from "./me";
 export {
   Settings,
   type SettingRetrieveResponse,
   type SettingListResponse,
   type SettingListParams,
   type SettingWatchParams,
-} from './settings';
+} from "./settings";
