@@ -1,6 +1,6 @@
 import { FeaturesSection } from "@/components/features-section";
 import FooterSection from "@/components/footer-section";
-import { HeroSection } from "@/components/hero-section";
+import { Hero } from "@/components/hero-section2";
 
 export const metadata = {
   description: "Your calendar, reimagined with AI",
@@ -10,7 +10,7 @@ export const metadata = {
 export default function Home() {
   return (
     <div>
-      <HeroSection />
+      <Hero />
       <FeaturesSection />
       <FooterSection />
     </div>
