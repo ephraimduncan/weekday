@@ -28,13 +28,23 @@ import { api } from "@/trpc/react";
 
 import { LogoMarkDark, LogoMarkLight } from "./logo";
 
+// todo: move to shared types
+interface Account {
+  id: string;
+  accountId: string;
+  createdAt: Date;
+  provider: string;
+  scopes: string[];
+  updatedAt: Date;
+}
+
 export function AppSidebar({
+  accounts,
   session,
-  sessions,
   ...props
 }: React.ComponentProps<typeof Sidebar> & {
+  accounts: Account[];
   session: Session;
-  sessions: Session[];
 }) {
   const { isCalendarVisible, toggleCalendarVisibility } = useCalendarContext();
   const { data: calendars } = api.calendar.getCalendars.useQuery();
@@ -112,12 +122,7 @@ export function AppSidebar({
         </SidebarGroup>
       </SidebarContent>
       <SidebarFooter>
-        <NavUser
-          onAccountSwitch={() => {}}
-          onAddAccount={() => {}}
-          session={session}
-          sessions={sessions}
-        />
+        <NavUser session={session} />
       </SidebarFooter>
     </Sidebar>
   );

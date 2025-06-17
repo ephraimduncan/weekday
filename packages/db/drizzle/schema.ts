@@ -4,6 +4,7 @@ export const createTable = pgTableCreator((name) => `weekday_${name}`);
 
 export const user = createTable("user", {
   id: text("id").primaryKey(),
+  defaultAccountId: text("default_account_id"),
   name: text("name").notNull(),
   email: text("email").notNull().unique(),
   emailVerified: boolean("email_verified").notNull(),
@@ -38,10 +39,13 @@ export const session = createTable("session", {
 export const account = createTable("account", {
   id: text("id").primaryKey(),
   accountId: text("account_id").notNull(),
-  providerId: text("provider_id").notNull(),
+  providerId: text("provider_id").$type<"google" | "microsoft">().notNull(),
+  name: text("name").$type<string>().notNull().default(""),
+  email: text("email").$type<string>().notNull().default(""),
+  image: text("image"),
   userId: text("user_id")
     .notNull()
-    .references(() => user.id),
+    .references(() => user.id, { onDelete: "cascade" }),
   accessToken: text("access_token"),
   refreshToken: text("refresh_token"),
   idToken: text("id_token"),

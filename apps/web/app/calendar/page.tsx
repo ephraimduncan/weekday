@@ -15,14 +15,15 @@ export const metadata: Metadata = {
 
 export default async function Page() {
   const session = await auth();
-  const deviceSessions = await authInstance.api.listDeviceSessions({
+
+  const accounts = await authInstance.api.listUserAccounts({
     headers: await headers(),
   });
 
   return (
     <HydrateClient>
       <SidebarProvider>
-        <AppSidebar session={session!} sessions={deviceSessions} />
+        <AppSidebar accounts={accounts} session={session!} />
         <SidebarInset className="flex-1 bg-transparent">
           <ResizablePanelsClient />
         </SidebarInset>

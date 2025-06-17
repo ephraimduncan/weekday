@@ -11,6 +11,9 @@ import {
   RiSparklingLine,
   RiUserLine,
 } from "@remixicon/react";
+import { linkSocial, signOut } from "@weekday/auth/auth-client";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -26,32 +29,57 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
+import { api } from "@/trpc/react";
 
-interface NavUserProps {
-  session: Session;
-  sessions: Session[];
-  onAccountSwitch: (accountId: string) => void;
-  onAddAccount: () => void;
-  onSignOut?: () => void;
-}
+export function NavUser({ session }: { session: Session }) {
+  const router = useRouter();
+  const utils = api.useUtils();
 
-export function NavUser({
-  session,
-  sessions,
-  onAccountSwitch,
-  onAddAccount,
-  onSignOut,
-}: NavUserProps) {
+  const { data: accounts } = api.account.list.useQuery();
+  const { data: defaultAccount } = api.account.getDefault.useQuery();
+  const setDefaultAccount = api.account.setDefault.useMutation({
+    onError: (error) => {
+      toast.error("Failed to switch account: " + error.message);
+    },
+    onSuccess: () => {
+      utils.account.list.invalidate();
+      utils.account.getDefault.invalidate();
+      router.refresh();
+      toast.success("Account switched successfully");
+    },
+  });
+
   const handleSignOut = async () => {
-    // todo: implement sign out
+    try {
+      await signOut();
+      toast.success("Signed out successfully");
+      router.push("/");
+    } catch (error) {
+      console.error("Failed to sign out:", error);
+      toast.error("Failed to sign out");
+    }
   };
 
   const handleAccountSwitch = (accountId: string) => {
-    // todo: implement account switch
+    setDefaultAccount.mutate({ accountId });
   };
 
-  const handleAddAccount = () => {
-    // todo: implement add account
+  const handleAddAccount = async (provider: "google" | "microsoft") => {
+    try {
+      const { data } = await linkSocial({
+        callbackURL: "/calendar",
+        provider,
+      });
+
+      toast.success(
+        `${provider.charAt(0).toUpperCase() + provider.slice(1)} account added successfully`,
+      );
+      utils.account.list.invalidate();
+      utils.account.getDefault.invalidate();
+    } catch (error) {
+      console.error("Failed to add account:", error);
+      toast.error("Failed to add account");
+    }
   };
 
   return (
@@ -90,33 +118,30 @@ export function NavUser({
               <div className="text-muted-foreground px-2 py-1.5 text-xs font-medium">
                 Accounts
               </div>
-              {sessions.map((account) => (
+              {accounts?.accounts?.map((account) => (
                 <DropdownMenuItem
-                  key={account.session.id}
+                  key={account.id}
                   className="cursor-pointer gap-3"
-                  onClick={() => handleAccountSwitch(account.session.id)}
+                  onClick={() => handleAccountSwitch(account.id)}
                 >
                   <Avatar className="size-6">
-                    <AvatarImage
-                      alt={account.user.name}
-                      src={account.user.image ?? ""}
-                    />
+                    <AvatarImage alt={account.name} src={account.image ?? ""} />
                     <AvatarFallback className="rounded-lg text-xs">
-                      {account.user.name?.charAt(0)}
+                      {account.name?.charAt(0)}
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex-1 text-left">
                     <div className="truncate text-sm font-medium">
-                      {account.user.name}
+                      {account.name}
                     </div>
                     <div className="text-muted-foreground truncate text-xs">
-                      {account.user.email && account.user.email.length > 18
-                        ? `${account.user.email.slice(0, 18)}...`
-                        : account.user.email}
+                      {account.email && account.email.length > 18
+                        ? `${account.email.slice(0, 18)}...`
+                        : account.email}
                     </div>
                   </div>
 
-                  {account.session.token === session.session.token && (
+                  {account.id === defaultAccount?.account?.id && (
                     <RiCheckLine className="text-primary size-4" />
                   )}
                 </DropdownMenuItem>
@@ -124,7 +149,7 @@ export function NavUser({
 
               <DropdownMenuItem
                 className="cursor-pointer gap-3"
-                onClick={handleAddAccount}
+                onClick={() => handleAddAccount("google")}
               >
                 <div className="border-muted-foreground/50 flex size-6 items-center justify-center rounded-lg border border-dashed">
                   <RiAddLine className="text-muted-foreground size-4" />
