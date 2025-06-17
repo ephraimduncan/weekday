@@ -33,6 +33,14 @@ const config = {
     "@weekday/env",
     "@weekday/auth",
   ],
+  webpack: (config) => {
+    // Ensure Jotai uses a single instance
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      jotai: require.resolve("jotai"),
+    };
+    return config;
+  },
   async redirects() {
     return [
       {

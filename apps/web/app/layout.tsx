@@ -6,6 +6,7 @@ import Script from "next/script";
 import { CalendarProvider } from "@/components/event-calendar/calendar-context";
 import { Toaster } from "@/components/ui/sonner";
 import { ChatProvider } from "@/providers/chat-provider";
+import { JotaiProvider } from "@/providers/jotai-provider";
 import { ThemeProvider } from "@/providers/theme-provider";
 import { TRPCReactProvider } from "@/trpc/react";
 
@@ -48,15 +49,17 @@ export default async function RootLayout({
           disableTransitionOnChange
           enableSystem
         >
-          <ChatProvider defaultOpen={chatDefaultOpen}>
-            <TRPCReactProvider>
-              <CalendarProvider>
-                {children}
-                <Analytics />
-              </CalendarProvider>
-              <Toaster />
-            </TRPCReactProvider>
-          </ChatProvider>
+          <JotaiProvider>
+            <ChatProvider defaultOpen={chatDefaultOpen}>
+              <TRPCReactProvider>
+                <CalendarProvider>
+                  {children}
+                  <Analytics />
+                </CalendarProvider>
+                <Toaster />
+              </TRPCReactProvider>
+            </ChatProvider>
+          </JotaiProvider>
         </ThemeProvider>
       </body>
     </html>
