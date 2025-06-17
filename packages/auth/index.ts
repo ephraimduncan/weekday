@@ -24,7 +24,6 @@ const betterAuth = betterAuthClient({
           console.log(account, "account");
         },
         async after(account) {
-          // Handle Google accounts created without refresh tokens
           if (account.providerId === "google" && !account.refreshToken) {
             try {
               await db
@@ -48,7 +47,7 @@ const betterAuth = betterAuthClient({
   plugins: [
     nextCookies(),
     multiSession({
-      maximumSessions: 10, // Allow up to 10 different account sessions
+      maximumSessions: 10,
     }),
   ],
   session: {
@@ -58,7 +57,7 @@ const betterAuth = betterAuthClient({
   account: {
     accountLinking: {
       enabled: true,
-      trustedProviders: ["google"], // Allow automatic linking of Google accounts
+      trustedProviders: ["google"],
     },
   },
   socialProviders: {
@@ -71,7 +70,6 @@ const betterAuth = betterAuthClient({
         "email",
         "profile",
         "https://www.googleapis.com/auth/calendar",
-        "https://www.googleapis.com/auth/gmail.readonly",
       ],
       redirectUrlParams: {
         access_type: "offline",
