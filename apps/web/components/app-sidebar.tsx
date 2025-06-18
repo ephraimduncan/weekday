@@ -44,7 +44,7 @@ export function AppSidebar({
     api.calendar.getAllAccountsCalendars.useQuery(undefined, {
       gcTime: 1000 * 60 * 60 * 24,
       refetchOnWindowFocus: false,
-      staleTime: 1000 * 60 * 10,
+      staleTime: 1000 * 30,
     });
 
   const { data: defaultAccount } = api.account.getDefault.useQuery(undefined, {
