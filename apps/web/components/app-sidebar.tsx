@@ -4,24 +4,18 @@ import * as React from "react";
 
 import type { Session } from "@weekday/auth";
 
-import { RiCheckLine } from "@remixicon/react";
 import Link from "next/link";
 
-import { useCalendarContext } from "@/components/event-calendar/calendar-context";
+import { AccountCalendarSection } from "@/components/account-calendar-section";
 import { NavUser } from "@/components/nav-user";
 import SidebarCalendar from "@/components/sidebar-calendar";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
   SidebarGroup,
-  SidebarGroupContent,
   SidebarGroupLabel,
   SidebarHeader,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { api } from "@/trpc/react";
@@ -46,8 +40,18 @@ export function AppSidebar({
   accounts: Account[];
   session: Session;
 }) {
-  const { isCalendarVisible, toggleCalendarVisibility } = useCalendarContext();
-  const { data: calendars } = api.calendar.getCalendars.useQuery();
+  const { data: allAccountsCalendars } =
+    api.calendar.getAllAccountsCalendars.useQuery(undefined, {
+      gcTime: 1000 * 60 * 60 * 24,
+      refetchOnWindowFocus: false,
+      staleTime: 1000 * 60 * 10,
+    });
+
+  const { data: defaultAccount } = api.account.getDefault.useQuery(undefined, {
+    gcTime: 1000 * 60 * 60 * 24,
+    refetchOnWindowFocus: false,
+    staleTime: 1000 * 60 * 5,
+  });
 
   return (
     <Sidebar
@@ -71,55 +75,29 @@ export function AppSidebar({
         <SidebarGroup className="px-1">
           <SidebarCalendar />
         </SidebarGroup>
-        <SidebarGroup className="mt-3 border-t px-1 pt-4">
-          <SidebarGroupLabel className="text-muted-foreground/65 uppercase">
-            Calendars
-          </SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {calendars?.map((calendar, index) => {
-                return (
-                  <SidebarMenuItem key={calendar.id}>
-                    <SidebarMenuButton
-                      asChild
-                      className="has-focus-visible:border-ring has-focus-visible:ring-ring/50 relative justify-between rounded-sm has-focus-visible:ring-[3px] [&>svg]:size-auto"
-                    >
-                      <span>
-                        <span className="flex items-center justify-between gap-3 font-medium">
-                          <Checkbox
-                            id={calendar.id}
-                            className="peer sr-only"
-                            checked={isCalendarVisible(calendar.id)}
-                            onCheckedChange={() =>
-                              toggleCalendarVisibility(calendar.id)
-                            }
-                          />
-                          <RiCheckLine
-                            size={16}
-                            className="peer-not-data-[state=checked]:invisible"
-                            aria-hidden="true"
-                          />
-                          <label
-                            className="peer-not-data-[state=checked]:text-muted-foreground/65 peer-not-data-[state=checked]:line-through after:absolute after:inset-0"
-                            htmlFor={calendar.id}
-                          >
-                            {calendar.summary ?? ""}
-                          </label>
-                        </span>
-                        <span
-                          className="size-1.5 rounded-full"
-                          style={{
-                            backgroundColor: calendar.backgroundColor,
-                          }}
-                        ></span>
-                      </span>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                );
-              })}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+
+        {allAccountsCalendars && allAccountsCalendars.length > 0 && (
+          <div className="mt-3">
+            <SidebarGroup className="border-t px-1 pt-4">
+              <SidebarGroupLabel className="text-muted-foreground/65 mb-2 uppercase">
+                Calendars
+              </SidebarGroupLabel>
+            </SidebarGroup>
+
+            {allAccountsCalendars.map((accountData) => (
+              <AccountCalendarSection
+                key={accountData.accountId}
+                accountEmail={accountData.accountEmail}
+                accountId={accountData.accountId}
+                accountName={accountData.accountName}
+                calendars={accountData.calendars}
+                isActiveAccount={
+                  accountData.accountId === defaultAccount?.account?.id
+                }
+              />
+            ))}
+          </div>
+        )}
       </SidebarContent>
       <SidebarFooter>
         <NavUser session={session} />

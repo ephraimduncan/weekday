@@ -35,8 +35,16 @@ export function NavUser({ session }: { session: Session }) {
   const router = useRouter();
   const utils = api.useUtils();
 
-  const { data: accounts } = api.account.list.useQuery();
-  const { data: defaultAccount } = api.account.getDefault.useQuery();
+  const { data: accounts } = api.account.list.useQuery(undefined, {
+    gcTime: 1000 * 60 * 60 * 24,
+    refetchOnWindowFocus: false,
+    staleTime: 1000 * 60 * 15,
+  });
+  const { data: defaultAccount } = api.account.getDefault.useQuery(undefined, {
+    gcTime: 1000 * 60 * 60 * 24,
+    refetchOnWindowFocus: false,
+    staleTime: 1000 * 60 * 5,
+  });
   const setDefaultAccount = api.account.setDefault.useMutation({
     onError: (error) => {
       toast.error("Failed to switch account: " + error.message);
@@ -44,6 +52,8 @@ export function NavUser({ session }: { session: Session }) {
     onSuccess: () => {
       utils.account.list.invalidate();
       utils.account.getDefault.invalidate();
+      utils.calendar.getCalendars.invalidate();
+      utils.calendar.getEvents.invalidate();
       router.refresh();
       toast.success("Account switched successfully");
     },
@@ -61,6 +71,10 @@ export function NavUser({ session }: { session: Session }) {
   };
 
   const handleAccountSwitch = (accountId: string) => {
+    if (accountId === defaultAccount?.account?.id) {
+      return;
+    }
+
     setDefaultAccount.mutate({ accountId });
   };
 
@@ -93,16 +107,23 @@ export function NavUser({ session }: { session: Session }) {
             >
               <Avatar className="size-8">
                 <AvatarImage
-                  alt={session.user.name}
-                  src={session.user.image ?? ""}
+                  alt={defaultAccount?.account?.name || session.user.name}
+                  src={
+                    defaultAccount?.account?.image || (session.user.image ?? "")
+                  }
                 />
                 <AvatarFallback className="rounded-lg">
-                  {session.user.name?.charAt(0)}
+                  {(defaultAccount?.account?.name || session.user.name)?.charAt(
+                    0,
+                  )}
                 </AvatarFallback>
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-medium">
-                  {session.user.name}
+                  {defaultAccount?.account?.name || session.user.name}
+                </span>
+                <span className="text-muted-foreground truncate text-xs">
+                  {defaultAccount?.account?.email || session.user.email}
                 </span>
               </div>
               <RiExpandUpDownLine className="text-muted-foreground/80 ml-auto size-5" />

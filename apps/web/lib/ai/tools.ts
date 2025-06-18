@@ -1,9 +1,26 @@
+import { getActiveAccount } from "@weekday/api/src/utils/accounts";
+import { auth } from "@weekday/auth";
 import { ProcessedCalendarEventSchema } from "@weekday/lib";
 import { api } from "@weekday/web/trpc/server";
 import { tool } from "ai";
+import { headers } from "next/headers";
 import { z } from "zod";
 
 type ProcessedCalendarEvent = z.infer<typeof ProcessedCalendarEventSchema>;
+
+async function getActiveAccountId(): Promise<string | undefined> {
+  try {
+    const session = await auth();
+    if (!session?.user) return undefined;
+
+    const requestHeaders = await headers();
+    const activeAccount = await getActiveAccount(session.user, requestHeaders);
+    return activeAccount.id;
+  } catch (error) {
+    console.error("Error getting active account:", error);
+    return undefined;
+  }
+}
 
 export const getEvents = tool({
   description:
@@ -41,6 +58,8 @@ export const getEvents = tool({
   }),
   execute: async ({ end, endTime, includeAllDay, start, startTime }) => {
     try {
+      const activeAccountId = await getActiveAccountId();
+
       let fullEnd, fullStart;
 
       if (start.includes("T")) {
@@ -56,6 +75,7 @@ export const getEvents = tool({
       }
 
       const events = await api.calendar.getEvents({
+        accountId: activeAccountId,
         includeAllDay: includeAllDay,
         timeMax: fullEnd,
         timeMin: fullStart,
@@ -97,7 +117,10 @@ export const getEvent = tool({
   }),
   execute: async ({ calendarId, eventId }) => {
     try {
+      const activeAccountId = await getActiveAccountId();
+
       const event = await api.calendar.getEvent({
+        accountId: activeAccountId,
         calendarId,
         eventId,
       });
@@ -128,6 +151,8 @@ export const getNextUpcomingEvent = tool({
   parameters: z.object({}),
   execute: async () => {
     try {
+      const activeAccountId = await getActiveAccountId();
+
       const now = new Date();
       const timeMin = now.toISOString();
 
@@ -136,6 +161,7 @@ export const getNextUpcomingEvent = tool({
       const timeMax = timeMaxDate.toISOString();
 
       const eventsResponse = await api.calendar.getEvents({
+        accountId: activeAccountId,
         includeAllDay: false,
         maxResults: 10,
         timeMax,
@@ -398,10 +424,13 @@ export const updateEvent = tool({
     summary,
   }: z.infer<typeof updateEventSchema>) => {
     try {
+      const activeAccountId = await getActiveAccountId();
+
       // Note: This tool assumes the caller has already fetched the event details
       // using the getEvent tool and is providing the necessary information for updates
 
       const updatePayload: any = {
+        accountId: activeAccountId,
         calendarId: "primary",
         event: {},
         eventId,
@@ -488,7 +517,10 @@ export const deleteEvent = tool({
   }),
   execute: async ({ calendarId, eventId }) => {
     try {
+      const activeAccountId = await getActiveAccountId();
+
       const deletedEventDetails = await api.calendar.deleteEvent({
+        accountId: activeAccountId,
         calendarId,
         eventId,
       });
@@ -535,6 +567,8 @@ export const createEvent = tool({
     summary,
   }: z.infer<typeof createEventSchema>) => {
     try {
+      const activeAccountId = await getActiveAccountId();
+
       const parsedStartTime = new Date(startTime);
       const parsedEndTime = new Date(endTime);
 
@@ -549,6 +583,7 @@ export const createEvent = tool({
       }
 
       const createdEvent = await api.calendar.createEvent({
+        accountId: activeAccountId,
         calendarId: "primary",
         createMeetLink: createMeetLink ?? false,
         event: {
@@ -612,6 +647,8 @@ export const createRecurringEvent = tool({
     recurrence: "daily" | "monthly" | "weekly" | "yearly";
   }) => {
     try {
+      const activeAccountId = await getActiveAccountId();
+
       const parsedStartTime = new Date(startTime);
       const parsedEndTime = new Date(endTime);
 
@@ -626,6 +663,7 @@ export const createRecurringEvent = tool({
       }
 
       const createdEvent = await api.calendar.createEvent({
+        accountId: activeAccountId,
         calendarId: "primary",
         createMeetLink: createMeetLink ?? false,
         event: {
@@ -709,7 +747,10 @@ export const getFreeSlots = tool({
     timeZone,
   }: z.infer<typeof getFreeSlotsSchema>) => {
     try {
+      const activeAccountId = await getActiveAccountId();
+
       const freeBusyInfo = await api.calendar.getFreeSlots({
+        accountId: activeAccountId,
         calendarIds,
         timeMax,
         timeMin,

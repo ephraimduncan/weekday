@@ -33,7 +33,6 @@ interface CalendarProviderProps {
 
 export function CalendarProvider({ children }: CalendarProviderProps) {
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
-
   const [hiddenCalendarIds, setHiddenCalendarIds] = useState<string[]>([]);
 
   const toggleCalendarVisibility = (id: string) => {

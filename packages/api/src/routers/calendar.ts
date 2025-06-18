@@ -20,10 +20,25 @@ import {
   ProcessedCalendarListEntrySchema,
   TimeSlotSchema,
 } from "./schema";
+import { getAllAccounts } from "../utils/accounts";
 
 // TODO: db: any -> PrismaClient
-async function createGoogleCalendarClient(db: any, userId: string) {
-  const account = await getGoogleAccount(db, userId);
+async function createGoogleCalendarClient(
+  db: any,
+  userId: string,
+  accountId?: string
+) {
+  let account;
+  if (accountId) {
+    account = await db.query.account.findFirst({
+      where: (table: any, { eq, and }: any) =>
+        and(eq(table.userId, userId), eq(table.id, accountId)),
+    });
+    if (!account) throw new Error(`Account with ID ${accountId} not found`);
+  } else {
+    account = await getGoogleAccount(db, userId);
+  }
+
   if (!account.accessToken) throw new Error("No access token found");
 
   return new RefreshableGoogleCalendar({
@@ -69,6 +84,12 @@ export const calendarRouter = createTRPCRouter({
   createEvent: protectedProcedure
     .input(
       z.object({
+        accountId: z
+          .string()
+          .optional()
+          .describe(
+            "Optional account ID to use for this operation. If not provided, uses the user's default account."
+          ),
         calendarId: z.string(),
         createMeetLink: z.boolean().optional().default(false),
         event: z.object({
@@ -105,7 +126,8 @@ export const calendarRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const client = await createGoogleCalendarClient(
         ctx.db,
-        ctx.session.user.id
+        ctx.session.user.id,
+        input.accountId || ctx.session.user.defaultAccountId || undefined
       );
 
       const baseEventData = prepareEventData({
@@ -171,6 +193,12 @@ export const calendarRouter = createTRPCRouter({
   deleteEvent: protectedProcedure
     .input(
       z.object({
+        accountId: z
+          .string()
+          .optional()
+          .describe(
+            "Optional account ID to use for this operation. If not provided, uses the user's default account."
+          ),
         calendarId: z.string(),
         eventId: z.string(),
       })
@@ -179,7 +207,8 @@ export const calendarRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const client = await createGoogleCalendarClient(
         ctx.db,
-        ctx.session.user.id
+        ctx.session.user.id,
+        input.accountId || ctx.session.user.defaultAccountId || undefined
       );
 
       let eventToReturn: any;
@@ -221,7 +250,8 @@ export const calendarRouter = createTRPCRouter({
     .query(async ({ ctx }) => {
       const client = await createGoogleCalendarClient(
         ctx.db,
-        ctx.session.user.id
+        ctx.session.user.id,
+        ctx.session.user.defaultAccountId || undefined
       );
 
       try {
@@ -268,6 +298,12 @@ export const calendarRouter = createTRPCRouter({
   getEvent: protectedProcedure
     .input(
       z.object({
+        accountId: z
+          .string()
+          .optional()
+          .describe(
+            "Optional account ID to use for this operation. If not provided, uses the user's default account."
+          ),
         calendarId: z.string(),
         eventId: z.string(),
       })
@@ -276,7 +312,8 @@ export const calendarRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       const client = await createGoogleCalendarClient(
         ctx.db,
-        ctx.session.user.id
+        ctx.session.user.id,
+        input.accountId || ctx.session.user.defaultAccountId || undefined
       );
 
       try {
@@ -294,6 +331,12 @@ export const calendarRouter = createTRPCRouter({
     .input(
       z
         .object({
+          accountId: z
+            .string()
+            .optional()
+            .describe(
+              "Optional account ID to use for this operation. If not provided, uses the user's default account."
+            ),
           calendarIds: z.array(z.string()).optional(),
           includeAllDay: z.boolean().optional().default(true),
           maxResults: z.number().int().positive().optional(),
@@ -306,7 +349,8 @@ export const calendarRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       const client = await createGoogleCalendarClient(
         ctx.db,
-        ctx.session.user.id
+        ctx.session.user.id,
+        input?.accountId || ctx.session.user.defaultAccountId || undefined
       );
 
       try {
@@ -396,6 +440,12 @@ export const calendarRouter = createTRPCRouter({
   getFreeSlots: protectedProcedure
     .input(
       z.object({
+        accountId: z
+          .string()
+          .optional()
+          .describe(
+            "Optional account ID to use for this operation. If not provided, uses the user's default account."
+          ),
         calendarIds: z.array(z.string()).min(1).optional().default(["primary"]),
         timeMax: z.string().datetime({
           message: "Invalid timeMax format. Expected ISO 8601 datetime string.",
@@ -410,7 +460,8 @@ export const calendarRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       const client = await createGoogleCalendarClient(
         ctx.db,
-        ctx.session.user.id
+        ctx.session.user.id,
+        input.accountId || ctx.session.user.defaultAccountId || undefined
       );
 
       const requestBody = {
@@ -470,6 +521,12 @@ export const calendarRouter = createTRPCRouter({
   updateEvent: protectedProcedure
     .input(
       z.object({
+        accountId: z
+          .string()
+          .optional()
+          .describe(
+            "Optional account ID to use for this operation. If not provided, uses the user's default account."
+          ),
         calendarId: z.string(),
         event: z.object({
           allDay: z.boolean().optional(),
@@ -490,7 +547,8 @@ export const calendarRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const client = await createGoogleCalendarClient(
         ctx.db,
-        ctx.session.user.id
+        ctx.session.user.id,
+        input.accountId || ctx.session.user.defaultAccountId || undefined
       );
 
       try {
@@ -578,7 +636,8 @@ export const calendarRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const client = await createGoogleCalendarClient(
         ctx.db,
-        ctx.session.user.id
+        ctx.session.user.id,
+        ctx.session.user.defaultAccountId || undefined
       );
 
       try {
@@ -623,5 +682,85 @@ export const calendarRouter = createTRPCRouter({
         console.error("Error updating attendee response:", error);
         throw error;
       }
+    }),
+
+  getAllAccountsCalendars: protectedProcedure
+    .output(
+      z.array(
+        z.object({
+          accountId: z.string(),
+          accountName: z.string(),
+          accountEmail: z.string(),
+          calendars: z.array(ProcessedCalendarListEntrySchema),
+        })
+      )
+    )
+    .query(async ({ ctx }) => {
+      const accounts = await getAllAccounts(ctx.session.user, ctx.headers);
+
+      const accountsWithCalendars = await Promise.all(
+        accounts.map(async (account) => {
+          try {
+            const client = await createGoogleCalendarClient(
+              ctx.db,
+              ctx.session.user.id,
+              account.id
+            );
+
+            const response = await client.users.me.calendarList.list();
+
+            const processedItems = (response.items || []).map((item: any) => {
+              const isEmailSummary = z
+                .string()
+                .email()
+                .safeParse(item.summary).success;
+              const isUserPrimaryCalendar =
+                isEmailSummary && item.summary === account.email;
+              const displaySummary = isUserPrimaryCalendar
+                ? (account.name ?? item.summary ?? "")
+                : (item.summary ?? "");
+
+              return {
+                id: item.id,
+                accessRole: item.accessRole,
+                backgroundColor: item.backgroundColor,
+                foregroundColor: item.foregroundColor,
+                primary: item.primary,
+                summary: displaySummary,
+              };
+            });
+
+            processedItems.sort((a: any, b: any) => {
+              if (a.primary && !b.primary) {
+                return -1;
+              }
+              if (!a.primary && b.primary) {
+                return 1;
+              }
+              return a.summary.localeCompare(b.summary);
+            });
+
+            return {
+              accountId: account.id,
+              accountName: account.name || account.email || "Unknown Account",
+              accountEmail: account.email || "",
+              calendars: processedItems,
+            };
+          } catch (error) {
+            console.error(
+              `Error fetching calendars for account ${account.id}:`,
+              error
+            );
+            return {
+              accountId: account.id,
+              accountName: account.name || account.email || "Unknown Account",
+              accountEmail: account.email || "",
+              calendars: [],
+            };
+          }
+        })
+      );
+
+      return accountsWithCalendars;
     }),
 });
