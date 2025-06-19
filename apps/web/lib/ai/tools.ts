@@ -35,7 +35,7 @@ export const getEvents = tool({
       .string()
       .optional()
       .describe(
-        "Optional end time in ISO 8601 format (THH:mm:ssZ). If not provided, defaults to end of the day.",
+        "Optional end time in ISO 8601 format (THH:mm:ss). If not provided, defaults to end of the day.",
       ),
     includeAllDay: z
       .boolean()
@@ -53,7 +53,7 @@ export const getEvents = tool({
       .string()
       .optional()
       .describe(
-        "Optional start time in ISO 8601 format (THH:mm:ssZ). If not provided, defaults to start of the day.",
+        "Optional start time in ISO 8601 format (THH:mm:ss). If not provided, defaults to start of the day.",
       ),
   }),
   execute: async ({ end, endTime, includeAllDay, start, startTime }) => {
@@ -65,13 +65,13 @@ export const getEvents = tool({
       if (start.includes("T")) {
         fullStart = start;
       } else {
-        fullStart = startTime ? `${start}${startTime}` : `${start}T00:00:00Z`;
+        fullStart = startTime ? `${start}${startTime}` : `${start}T00:00:00`;
       }
 
       if (end.includes("T")) {
         fullEnd = end;
       } else {
-        fullEnd = endTime ? `${end}${endTime}` : `${end}T23:59:59Z`;
+        fullEnd = endTime ? `${end}${endTime}` : `${end}T23:59:59`;
       }
 
       const events = await api.calendar.getEvents({
@@ -422,6 +422,7 @@ export const updateEvent = tool({
     originalStartTime,
     sendUpdates,
     summary,
+    timeZone,
   }: z.infer<typeof updateEventSchema>) => {
     try {
       const activeAccountId = await getActiveAccountId();
@@ -473,6 +474,11 @@ export const updateEvent = tool({
 
       // Handle attendees (this would actually happen in the backend with the full event object)
       // We're just preparing the update request here
+
+      // Add timezone if provided
+      if (timeZone) {
+        updatePayload.timeZone = timeZone;
+      }
 
       // Update the event using the trpc procedure
       const updatedEvent = await api.calendar.updateEvent(updatePayload);
@@ -565,6 +571,7 @@ export const createEvent = tool({
     reminders,
     startTime,
     summary,
+    timeZone,
   }: z.infer<typeof createEventSchema>) => {
     try {
       const activeAccountId = await getActiveAccountId();
@@ -596,6 +603,7 @@ export const createEvent = tool({
           start: parsedStartTime,
           title: summary,
         },
+        timeZone,
       });
 
       return {
@@ -643,6 +651,7 @@ export const createRecurringEvent = tool({
     reminders,
     startTime,
     summary,
+    timeZone,
   }: z.infer<typeof createEventSchema> & {
     recurrence: "daily" | "monthly" | "weekly" | "yearly";
   }) => {
@@ -676,6 +685,7 @@ export const createRecurringEvent = tool({
           start: parsedStartTime,
           title: summary,
         },
+        timeZone,
       });
 
       return {

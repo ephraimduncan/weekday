@@ -26,7 +26,7 @@ import { getAllAccounts } from "../utils/accounts";
 async function createGoogleCalendarClient(
   db: any,
   userId: string,
-  accountId?: string
+  accountId?: string,
 ) {
   let account;
   if (accountId) {
@@ -52,7 +52,7 @@ async function validateEventPermissions(
   client: RefreshableGoogleCalendar,
   eventId: string,
   calendarId: string,
-  requiredAction: "edit" | "delete"
+  requiredAction: "edit" | "delete",
 ): Promise<void> {
   try {
     const event = await client.calendars.events.retrieve(eventId, {
@@ -66,7 +66,7 @@ async function validateEventPermissions(
 
     if (!isOrganizer && !isCreator) {
       throw new Error(
-        `You don't have permission to ${requiredAction} this event. Only the organizer or creator can ${requiredAction} events.`
+        `You don't have permission to ${requiredAction} this event. Only the organizer or creator can ${requiredAction} events.`,
       );
     }
   } catch (error) {
@@ -88,10 +88,11 @@ export const calendarRouter = createTRPCRouter({
           .string()
           .optional()
           .describe(
-            "Optional account ID to use for this operation. If not provided, uses the user's default account."
+            "Optional account ID to use for this operation. If not provided, uses the user's default account.",
           ),
         calendarId: z.string(),
         createMeetLink: z.boolean().optional().default(false),
+        timeZone: z.string().optional(),
         event: z.object({
           allDay: z.boolean().optional().default(false),
           attendees: z
@@ -111,7 +112,7 @@ export const calendarRouter = createTRPCRouter({
                   z.object({
                     method: z.enum(["email", "popup"]),
                     minutes: z.number().int().positive(),
-                  })
+                  }),
                 )
                 .optional(),
               useDefault: z.boolean().optional(),
@@ -120,25 +121,29 @@ export const calendarRouter = createTRPCRouter({
           start: z.date(),
           title: z.string(),
         }),
-      })
+      }),
     )
     .output(ProcessedCalendarEventSchema)
     .mutation(async ({ ctx, input }) => {
       const client = await createGoogleCalendarClient(
         ctx.db,
         ctx.session.user.id,
-        input.accountId || ctx.session.user.defaultAccountId || undefined
+        input.accountId || ctx.session.user.defaultAccountId || undefined,
       );
 
-      const baseEventData = prepareEventData({
-        allDay: input.event.allDay,
-        color: input.event.color,
-        description: input.event.description,
-        end: input.event.end,
-        location: input.event.location,
-        start: input.event.start,
-        title: input.event.title,
-      });
+      const baseEventData = prepareEventData(
+        {
+          allDay: input.event.allDay,
+          color: input.event.color,
+          description: input.event.description,
+          end: input.event.end,
+          location: input.event.location,
+          start: input.event.start,
+          title: input.event.title,
+        },
+        undefined,
+        input.timeZone,
+      );
 
       const finalEventPayload: any = { ...baseEventData };
 
@@ -159,7 +164,7 @@ export const calendarRouter = createTRPCRouter({
       if (input.event.recurrence && input.event.recurrence !== "none") {
         const recurrenceRules = convertRecurrenceToRRule(
           input.event.recurrence,
-          input.event.start
+          input.event.start,
         );
         if (recurrenceRules) {
           finalEventPayload.recurrence = recurrenceRules;
@@ -181,7 +186,7 @@ export const calendarRouter = createTRPCRouter({
       try {
         const createdEvent = await client.calendars.events.create(
           input.calendarId,
-          createParams
+          createParams,
         );
         return processEventData(createdEvent, input.calendarId);
       } catch (error) {
@@ -197,18 +202,18 @@ export const calendarRouter = createTRPCRouter({
           .string()
           .optional()
           .describe(
-            "Optional account ID to use for this operation. If not provided, uses the user's default account."
+            "Optional account ID to use for this operation. If not provided, uses the user's default account.",
           ),
         calendarId: z.string(),
         eventId: z.string(),
-      })
+      }),
     )
     .output(ProcessedCalendarEventSchema)
     .mutation(async ({ ctx, input }) => {
       const client = await createGoogleCalendarClient(
         ctx.db,
         ctx.session.user.id,
-        input.accountId || ctx.session.user.defaultAccountId || undefined
+        input.accountId || ctx.session.user.defaultAccountId || undefined,
       );
 
       let eventToReturn: any;
@@ -227,7 +232,7 @@ export const calendarRouter = createTRPCRouter({
           client,
           input.eventId,
           input.calendarId,
-          "delete"
+          "delete",
         );
       } catch (error) {
         console.error("Permission validation failed:", error);
@@ -251,7 +256,7 @@ export const calendarRouter = createTRPCRouter({
       const client = await createGoogleCalendarClient(
         ctx.db,
         ctx.session.user.id,
-        ctx.session.user.defaultAccountId || undefined
+        ctx.session.user.defaultAccountId || undefined,
       );
 
       try {
@@ -302,18 +307,18 @@ export const calendarRouter = createTRPCRouter({
           .string()
           .optional()
           .describe(
-            "Optional account ID to use for this operation. If not provided, uses the user's default account."
+            "Optional account ID to use for this operation. If not provided, uses the user's default account.",
           ),
         calendarId: z.string(),
         eventId: z.string(),
-      })
+      }),
     )
     .output(ProcessedCalendarEventSchema)
     .query(async ({ ctx, input }) => {
       const client = await createGoogleCalendarClient(
         ctx.db,
         ctx.session.user.id,
-        input.accountId || ctx.session.user.defaultAccountId || undefined
+        input.accountId || ctx.session.user.defaultAccountId || undefined,
       );
 
       try {
@@ -335,7 +340,7 @@ export const calendarRouter = createTRPCRouter({
             .string()
             .optional()
             .describe(
-              "Optional account ID to use for this operation. If not provided, uses the user's default account."
+              "Optional account ID to use for this operation. If not provided, uses the user's default account.",
             ),
           calendarIds: z.array(z.string()).optional(),
           includeAllDay: z.boolean().optional().default(true),
@@ -343,14 +348,14 @@ export const calendarRouter = createTRPCRouter({
           timeMax: z.string().optional(),
           timeMin: z.string().optional(),
         })
-        .optional()
+        .optional(),
     )
     .output(z.array(ProcessedCalendarEventSchema))
     .query(async ({ ctx, input }) => {
       const client = await createGoogleCalendarClient(
         ctx.db,
         ctx.session.user.id,
-        input?.accountId || ctx.session.user.defaultAccountId || undefined
+        input?.accountId || ctx.session.user.defaultAccountId || undefined,
       );
 
       try {
@@ -360,12 +365,12 @@ export const calendarRouter = createTRPCRouter({
           (item: any) => ({
             id: item.id,
             backgroundColor: item.backgroundColor,
-          })
+          }),
         );
 
         if (input?.calendarIds?.length) {
           calendarsToFetch = calendarsToFetch.filter((c: any) =>
-            input.calendarIds!.includes(c.id)
+            input.calendarIds!.includes(c.id),
           );
         }
 
@@ -377,7 +382,7 @@ export const calendarRouter = createTRPCRouter({
           0,
           23,
           59,
-          59
+          59,
         );
 
         const timeMinISO = input?.timeMin ?? defaultTimeMin.toISOString();
@@ -421,7 +426,7 @@ export const calendarRouter = createTRPCRouter({
           } catch (fetchError) {
             console.error(
               `Error fetching events for calendar ${calendar.id}:`,
-              fetchError
+              fetchError,
             );
             return [];
           }
@@ -444,7 +449,7 @@ export const calendarRouter = createTRPCRouter({
           .string()
           .optional()
           .describe(
-            "Optional account ID to use for this operation. If not provided, uses the user's default account."
+            "Optional account ID to use for this operation. If not provided, uses the user's default account.",
           ),
         calendarIds: z.array(z.string()).min(1).optional().default(["primary"]),
         timeMax: z.string().datetime({
@@ -454,14 +459,14 @@ export const calendarRouter = createTRPCRouter({
           message: "Invalid timeMin format. Expected ISO 8601 datetime string.",
         }),
         timeZone: z.string().optional().default("UTC"),
-      })
+      }),
     )
     .output(z.array(TimeSlotSchema))
     .query(async ({ ctx, input }) => {
       const client = await createGoogleCalendarClient(
         ctx.db,
         ctx.session.user.id,
-        input.accountId || ctx.session.user.defaultAccountId || undefined
+        input.accountId || ctx.session.user.defaultAccountId || undefined,
       );
 
       const requestBody = {
@@ -483,7 +488,7 @@ export const calendarRouter = createTRPCRouter({
           if (calendarInfo?.errors && calendarInfo.errors.length > 0) {
             console.warn(
               `Errors encountered for calendar ${calId}:`,
-              calendarInfo.errors
+              calendarInfo.errors,
             );
           }
 
@@ -500,7 +505,7 @@ export const calendarRouter = createTRPCRouter({
 
         if (queryStartTime >= queryEndTime) {
           console.warn(
-            "timeMin is not before timeMax, returning no free slots."
+            "timeMin is not before timeMax, returning no free slots.",
           );
           return [];
         }
@@ -508,7 +513,7 @@ export const calendarRouter = createTRPCRouter({
         const freeSlots = calculateFreeSlotsFromBusy(
           mergedBusyIntervals,
           queryStartTime,
-          queryEndTime
+          queryEndTime,
         );
 
         return freeSlots;
@@ -525,7 +530,7 @@ export const calendarRouter = createTRPCRouter({
           .string()
           .optional()
           .describe(
-            "Optional account ID to use for this operation. If not provided, uses the user's default account."
+            "Optional account ID to use for this operation. If not provided, uses the user's default account.",
           ),
         calendarId: z.string(),
         event: z.object({
@@ -541,14 +546,15 @@ export const calendarRouter = createTRPCRouter({
           title: z.string().optional(),
         }),
         eventId: z.string(),
-      })
+        timeZone: z.string().optional(),
+      }),
     )
     .output(ProcessedCalendarEventSchema)
     .mutation(async ({ ctx, input }) => {
       const client = await createGoogleCalendarClient(
         ctx.db,
         ctx.session.user.id,
-        input.accountId || ctx.session.user.defaultAccountId || undefined
+        input.accountId || ctx.session.user.defaultAccountId || undefined,
       );
 
       try {
@@ -556,7 +562,7 @@ export const calendarRouter = createTRPCRouter({
           client,
           input.eventId,
           input.calendarId,
-          "edit"
+          "edit",
         );
       } catch (error) {
         console.error("Permission validation failed:", error);
@@ -568,7 +574,7 @@ export const calendarRouter = createTRPCRouter({
           input.eventId,
           {
             calendarId: input.calendarId,
-          }
+          },
         );
 
         console.log("currentEvent trpc route: calendar", currentEvent);
@@ -583,7 +589,8 @@ export const calendarRouter = createTRPCRouter({
             start: input.event.start,
             title: input.event.title,
           },
-          currentEvent
+          currentEvent,
+          input.timeZone,
         );
 
         if (input.event.recurrence !== undefined) {
@@ -595,8 +602,8 @@ export const calendarRouter = createTRPCRouter({
               input.event.start ||
                 new Date(
                   (currentEvent as any).start?.dateTime ||
-                    (currentEvent as any).start?.date!
-                )
+                    (currentEvent as any).start?.date!,
+                ),
             );
             if (recurrenceRules) {
               eventData.recurrence = recurrenceRules;
@@ -609,7 +616,7 @@ export const calendarRouter = createTRPCRouter({
           {
             calendarId: input.calendarId,
             ...eventData,
-          }
+          },
         );
 
         return processEventData(updatedEvent, input.calendarId);
@@ -630,14 +637,14 @@ export const calendarRouter = createTRPCRouter({
           "tentative",
           "needsAction",
         ]),
-      })
+      }),
     )
     .output(ProcessedCalendarEventSchema)
     .mutation(async ({ ctx, input }) => {
       const client = await createGoogleCalendarClient(
         ctx.db,
         ctx.session.user.id,
-        ctx.session.user.defaultAccountId || undefined
+        ctx.session.user.defaultAccountId || undefined,
       );
 
       try {
@@ -645,17 +652,17 @@ export const calendarRouter = createTRPCRouter({
           input.eventId,
           {
             calendarId: input.calendarId,
-          }
+          },
         );
 
         const processedEvent = processEventData(currentEvent, input.calendarId);
 
         const userAttendee = processedEvent.attendees?.find(
-          (attendee) => attendee.self === true
+          (attendee) => attendee.self === true,
         );
         if (!userAttendee) {
           throw new Error(
-            "You are not an attendee of this event and cannot respond to it."
+            "You are not an attendee of this event and cannot respond to it.",
           );
         }
 
@@ -665,7 +672,7 @@ export const calendarRouter = createTRPCRouter({
               return { ...attendee, responseStatus: input.responseStatus };
             }
             return attendee;
-          }
+          },
         );
 
         const updatedEvent = await client.calendars.events.update(
@@ -674,7 +681,7 @@ export const calendarRouter = createTRPCRouter({
             calendarId: input.calendarId,
             attendees: updatedAttendees,
             attendeesOmitted: false,
-          }
+          },
         );
 
         return processEventData(updatedEvent, input.calendarId);
@@ -692,8 +699,8 @@ export const calendarRouter = createTRPCRouter({
           accountName: z.string(),
           accountEmail: z.string(),
           calendars: z.array(ProcessedCalendarListEntrySchema),
-        })
-      )
+        }),
+      ),
     )
     .query(async ({ ctx }) => {
       const accounts = await getAllAccounts(ctx.session.user, ctx.headers);
@@ -704,7 +711,7 @@ export const calendarRouter = createTRPCRouter({
             const client = await createGoogleCalendarClient(
               ctx.db,
               ctx.session.user.id,
-              account.id
+              account.id,
             );
 
             const response = await client.users.me.calendarList.list();
@@ -749,7 +756,7 @@ export const calendarRouter = createTRPCRouter({
           } catch (error) {
             console.error(
               `Error fetching calendars for account ${account.id}:`,
-              error
+              error,
             );
             return {
               accountId: account.id,
@@ -758,7 +765,7 @@ export const calendarRouter = createTRPCRouter({
               calendars: [],
             };
           }
-        })
+        }),
       );
 
       return accountsWithCalendars;

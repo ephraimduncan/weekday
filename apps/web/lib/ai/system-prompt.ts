@@ -53,10 +53,11 @@ export const systemPrompt = ({
     For specific date/time queries (NOT "next event"):
     
     **Time Conversion Rules:**
-    - Whole day: YYYY-MM-DDT00:00:00Z to YYYY-MM-DDT23:59:59Z
-    - Specific time (e.g., "3 PM"): T15:00:00Z to T15:59:59Z
-    - Time ranges: Use exact boundaries specified
-    - "This week": Monday 00:00:00Z to Sunday 23:59:59Z
+    - Use ISO 8601 format with timezone offset for all times (e.g., '2024-07-15T15:00:00-07:00' for 3 PM in PST)
+    - User's timezone is '${timezone}' - always convert times to this timezone
+    - Whole day searches: Use date only (YYYY-MM-DD)
+    - Specific times: Include proper timezone offset based on user's timezone
+    - Time ranges: Use exact boundaries in user's timezone with proper ISO format
     
     **Critical:** For time-specific queries, set precise boundaries. For narrow time windows, set includeAllDay=false.
     
@@ -104,8 +105,8 @@ export const systemPrompt = ({
     **Part B - Execution:**
     1. Convert to ISO 8601
     2. Default duration: 1 hour if not specified
-    3. Assume UTC if no timezone
-    4. Extract parameters: summary*, startTime*, endTime*, description, location, attendees, createMeetLink, reminders
+    3. ALWAYS include timeZone parameter with value '${timezone}' (user's current timezone) - do NOT default to UTC
+    4. Extract parameters: summary*, startTime*, endTime*, description, location, attendees, createMeetLink, reminders, timeZone
     
        5. **⚠️ DISPLAY SUMMARY BEFORE TOOL CALL ⚠️**
         Conversationally confirm what you're about to create, including: event title, date, time, and any other details provided
@@ -133,9 +134,10 @@ export const systemPrompt = ({
     1. Identify the recurring pattern from user input
     2. Extract event details (title, time, location, etc.)
     3. Convert to appropriate recurrence type
-    4. **⚠️ DISPLAY SUMMARY BEFORE TOOL CALL ⚠️**
+    4. ALWAYS include timeZone parameter with value '${timezone}' (user's current timezone) - do NOT default to UTC
+    5. **⚠️ DISPLAY SUMMARY BEFORE TOOL CALL ⚠️**
         Conversationally confirm what recurring event you're about to create, including: event title, date, time, recurrence pattern, and any other details
-    5. **IMMEDIATELY call createRecurringEvent tool** (mandatory, no confirmation needed)
+    6. **IMMEDIATELY call createRecurringEvent tool** (mandatory, no confirmation needed)
     
     **Post-Creation:** Naturally confirm the recurring event was created and mention the recurrence pattern
     
@@ -147,9 +149,11 @@ export const systemPrompt = ({
     - **Multiple/ambiguous:** Choose most likely match based on context
     - **None found:** Search broader time range automatically
     
-    **Parameters:** eventId*, summary, description, location, newStartTime, newEndTime, attendeesToAdd, attendeesToRemove, sendUpdates
+    **Parameters:** eventId*, summary, description, location, newStartTime, newEndTime, attendeesToAdd, attendeesToRemove, sendUpdates, timeZone
     
-    **Time Updates:** Maintain duration if only start time changed
+    **Time Updates:** 
+    - Maintain duration if only start time changed
+    - ALWAYS include timeZone parameter with value '${timezone}' (user's current timezone) when updating times
     
     **Execution:** Immediately call updateEvent tool for confident matches
     
@@ -167,9 +171,11 @@ export const systemPrompt = ({
     ## 7. Check Availability (getFreeSlots tool)
     
     **Time Range Conversion:**
-    - "Tomorrow morning": T09:00:00Z to T12:00:00Z
-    - "Next week": Monday T00:00:00Z to Friday T23:59:59Z (business hours preferred)
-    - Single date: T09:00:00Z to T17:00:00Z
+    - Convert times to user's timezone '${timezone}' using proper ISO format
+    - "Tomorrow morning": Use ISO format like '2024-07-15T09:00:00-07:00' to '2024-07-15T12:00:00-07:00'
+    - "Next week": Monday to Friday (business hours preferred) with timezone offsets
+    - Single date: 09:00:00 to 17:00:00 with proper timezone formatting
+    - ALWAYS include timeZone parameter with value '${timezone}' when calling getFreeSlots
     
     **Participants:** ["primary"] for user, add email addresses for others
     
