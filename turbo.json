@@ -10,11 +10,7 @@
         "BETTER_AUTH_GOOGLE_SECRET",
         "BETTER_AUTH_SECRET",
         "BETTER_AUTH_URL",
-        "DATABASE_URL",
-        "OPENROUTER_API_KEY",
-        "GOOGLE_GENERATIVE_AI_API_KEY",
-        "ANTHROPIC_API_KEY",
-        "OPENAI_API_KEY"
+        "DATABASE_URL"
       ]
     },
     "dev": {

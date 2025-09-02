@@ -1,7 +1,11 @@
-import { smoothStream, stepCountIs, streamText, convertToModelMessages } from "ai";
+import {
+  convertToModelMessages,
+  smoothStream,
+  stepCountIs,
+  streamText,
+} from "ai";
 import { v7 as uuidv7 } from "uuid";
 
-import { models } from "@/lib/ai/models";
 import { systemPrompt } from "@/lib/ai/system-prompt";
 import {
   createEvent,
@@ -32,11 +36,9 @@ export async function POST(req: Request) {
 
     const result = streamText({
       messages: convertToModelMessages(messages),
-      model: models.google,
-      system: systemPrompt({ currentDate, formattedDate, timezone }),
+      model: "openai/gpt-5",
       stopWhen: stepCountIs(25),
-      transform: smoothStream({ chunking: "word" }),
-
+      system: systemPrompt({ currentDate, formattedDate, timezone }),
       tools: {
         createEvent,
         createRecurringEvent,
@@ -47,10 +49,10 @@ export async function POST(req: Request) {
         getNextUpcomingEvent,
         updateEvent,
       },
-
+      transform: smoothStream({ chunking: "word" }),
       onError: (error) => {
         console.error("Error while streaming:", JSON.stringify(error, null, 2));
-      }
+      },
     });
 
     return result.toUIMessageStreamResponse({

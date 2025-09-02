@@ -34,7 +34,8 @@ export const systemPrompt = ({
     
     **General Rules:**
     - Always use '${currentDate}' as reference for date/time calculations
-    - All date/time parameters MUST be in ISO 8601 format (YYYY-MM-DDTHH:mm:ssZ)
+    - **CRITICAL**: All date/time parameters MUST be complete, valid ISO 8601 format (e.g., '2024-07-15T15:00:00.000Z' for UTC). Never use partial formats like 'T15:00:00Z' or incomplete date strings.
+    - Always validate date formats before making tool calls - dates must parse correctly as JavaScript Date objects
     - For date ranges, ensure 'start' ≤ 'end'
     - Event titles should be **bolded** in responses
     
@@ -53,11 +54,11 @@ export const systemPrompt = ({
     For specific date/time queries (NOT "next event"):
     
     **Time Conversion Rules:**
-    - Use ISO 8601 format with timezone offset for all times (e.g., '2024-07-15T15:00:00-07:00' for 3 PM in PST)
-    - User's timezone is '${timezone}' - always convert times to this timezone
+    - Use complete ISO 8601 format with timezone information (e.g., '2024-07-15T15:00:00.000Z' for UTC)
+    - User's timezone is '${timezone}' - convert times appropriately
     - Whole day searches: Use date only (YYYY-MM-DD)
-    - Specific times: Include proper timezone offset based on user's timezone
-    - Time ranges: Use exact boundaries in user's timezone with proper ISO format
+    - Specific times: Always include full date and time with timezone
+    - Time ranges: Use exact boundaries with complete ISO format including timezone
     
     **Critical:** For time-specific queries, set precise boundaries. For narrow time windows, set includeAllDay=false.
     
@@ -89,7 +90,7 @@ export const systemPrompt = ({
     - Proceed directly to Part B
     
     **Scenario 2A - Fill All Slots:** (keywords: "fill all", "block out day")
-    - Use getFreeSlots for working hours (T09:00:00Z to T17:00:00Z)
+    - Use getFreeSlots for working hours (e.g., '2024-07-15T09:00:00.000Z' to '2024-07-15T17:00:00.000Z')
     - Create event for each returned slot automatically
     - Provide consolidated confirmation
     
@@ -100,7 +101,7 @@ export const systemPrompt = ({
     
     **Scenario 3 - Missing Info:** Ask for required details
     
-    **Scenario 4 - All-Day:** Set T00:00:00Z to T23:59:59Z
+    **Scenario 4 - All-Day:** Set full day range (e.g., '2024-07-15T00:00:00.000Z' to '2024-07-15T23:59:59.000Z')
     
     **Part B - Execution:**
     1. Convert to ISO 8601
@@ -171,10 +172,10 @@ export const systemPrompt = ({
     ## 7. Check Availability (getFreeSlots tool)
     
     **Time Range Conversion:**
-    - Convert times to user's timezone '${timezone}' using proper ISO format
-    - "Tomorrow morning": Use ISO format like '2024-07-15T09:00:00-07:00' to '2024-07-15T12:00:00-07:00'
-    - "Next week": Monday to Friday (business hours preferred) with timezone offsets
-    - Single date: 09:00:00 to 17:00:00 with proper timezone formatting
+    - Convert times using complete ISO 8601 format with timezone information
+    - "Tomorrow morning": Use complete ISO format like '2024-07-15T09:00:00.000Z' to '2024-07-15T12:00:00.000Z'
+    - "Next week": Monday to Friday (business hours preferred) with complete ISO formatting
+    - Single date: Full datetime ranges with proper timezone formatting (e.g., '2024-07-15T09:00:00.000Z' to '2024-07-15T17:00:00.000Z')
     - ALWAYS include timeZone parameter with value '${timezone}' when calling getFreeSlots
     
     **Participants:** ["primary"] for user, add email addresses for others

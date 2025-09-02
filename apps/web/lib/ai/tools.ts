@@ -32,7 +32,7 @@ export const getEvents = tool({
     end: z
       .string()
       .describe(
-        "End date in ISO 8601 format (YYYY-MM-DD). If endTime is also provided, this should be the full ISO 8601 date-time string.",
+        "End date in ISO 8601 format (YYYY-MM-DD or YYYY-MM-DDTHH:mm:ss). Time will be added if not provided. Ensure proper date format.",
       ),
     endTime: z
       .string()
@@ -50,7 +50,7 @@ export const getEvents = tool({
     start: z
       .string()
       .describe(
-        "Start date in ISO 8601 format (YYYY-MM-DD). If startTime is also provided, this should be the full ISO 8601 date-time string.",
+        "Start date in ISO 8601 format (YYYY-MM-DD or YYYY-MM-DDTHH:mm:ss). Time will be added if not provided. Ensure proper date format.",
       ),
     startTime: z
       .string()
@@ -63,18 +63,40 @@ export const getEvents = tool({
     try {
       const activeAccountId = await getActiveAccountId();
 
-      let fullEnd, fullStart;
+      // Parse and normalize dates to ensure proper ISO 8601 format
+      let fullStart: string;
+      let fullEnd: string;
 
+      // Handle start date/time
       if (start.includes("T")) {
-        fullStart = start;
+        // Already has time, ensure it's valid ISO
+        fullStart = new Date(start).toISOString();
       } else {
-        fullStart = startTime ? `${start}${startTime}` : `${start}T00:00:00`;
+        // Date only, add time
+        const startDateTime = startTime 
+          ? `${start}T${startTime.replace(/^T/, '')}` 
+          : `${start}T00:00:00`;
+        fullStart = new Date(startDateTime).toISOString();
       }
 
+      // Handle end date/time
       if (end.includes("T")) {
-        fullEnd = end;
+        // Already has time, ensure it's valid ISO
+        fullEnd = new Date(end).toISOString();
       } else {
-        fullEnd = endTime ? `${end}${endTime}` : `${end}T23:59:59`;
+        // Date only, add time
+        const endDateTime = endTime 
+          ? `${end}T${endTime.replace(/^T/, '')}` 
+          : `${end}T23:59:59`;
+        fullEnd = new Date(endDateTime).toISOString();
+      }
+
+      // Validate the dates
+      if (isNaN(Date.parse(fullStart)) || isNaN(Date.parse(fullEnd))) {
+        return { 
+          error: "Invalid date format provided", 
+          events: [] 
+        };
       }
 
       const events = await api.calendar.getEvents({

@@ -27,8 +27,6 @@ export const env = createEnv({
     DATABASE_URL: process.env.DATABASE_URL,
     NEXT_TELEMETRY_DISABLED: process.env.NEXT_TELEMETRY_DISABLED,
     NODE_ENV: process.env.NODE_ENV,
-
-    OPENROUTER_API_KEY: process.env.OPENROUTER_API_KEY,
   },
   /**
    * Specify your server-side environment variables schema here. This way you can ensure the app
@@ -46,8 +44,6 @@ export const env = createEnv({
     NODE_ENV: z
       .enum(["development", "test", "production"])
       .default("development"),
-
-    OPENROUTER_API_KEY: z.string(),
   },
   /**
    * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation. This is especially
