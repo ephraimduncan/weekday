@@ -147,7 +147,7 @@ export function AccountCalendarSection({
                         </label>
                       </span>
                       <span
-                        className="size-1.5 flex-shrink-0 rounded-full"
+                        className="size-1.5 shrink-0 rounded-full"
                         style={{
                           backgroundColor:
                             calendar.backgroundColor || "#3174ad",

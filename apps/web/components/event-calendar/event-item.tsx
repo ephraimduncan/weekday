@@ -219,7 +219,7 @@ const EventItemComponent = function EventItem({
     return (
       <EventWrapper
         className={cn(
-          "mt-[var(--event-gap)] h-[var(--event-height)] items-center text-[10px] sm:text-[13px]",
+          "mt-(--event-gap) h-(--event-height) items-center text-[10px] sm:text-[13px]",
           className,
         )}
         onClick={onClick}

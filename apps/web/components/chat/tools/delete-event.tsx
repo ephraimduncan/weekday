@@ -37,7 +37,7 @@ export function DeleteEventCall(_props: DeleteEventCallProps) {
   return (
     <div className="flex flex-col gap-1 px-3 py-2 text-sm">
       <div className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
-        <Hourglass className="h-4 w-4 flex-shrink-0 animate-spin text-blue-500" />
+        <Hourglass className="h-4 w-4 shrink-0 animate-spin text-blue-500" />
         <p className="font-medium">Attempting to delete event...</p>
       </div>
     </div>
@@ -87,9 +87,9 @@ export function DeleteEventResult({ toolInvocation }: DeleteEventResultProps) {
     <div className="flex flex-col gap-2 px-3 py-2 text-sm">
       <div className="flex items-center gap-2">
         {success ? (
-          <CheckCircle className="h-4 w-4 flex-shrink-0 text-green-600" />
+          <CheckCircle className="h-4 w-4 shrink-0 text-green-600" />
         ) : (
-          <XCircle className="h-4 w-4 flex-shrink-0 text-red-500" />
+          <XCircle className="h-4 w-4 shrink-0 text-red-500" />
         )}
         <p
           className={`font-medium ${success ? "text-green-700 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}
@@ -113,7 +113,7 @@ export function DeleteEventResult({ toolInvocation }: DeleteEventResultProps) {
       {success && deletedEvent && (
         <div className="mt-1 rounded-md border border-gray-200 bg-white p-3 shadow-sm dark:border-gray-700 dark:bg-gray-800">
           <div className="flex items-center gap-2">
-            <Trash2 className="h-4 w-4 flex-shrink-0 text-gray-500 dark:text-gray-400" />
+            <Trash2 className="h-4 w-4 shrink-0 text-gray-500 dark:text-gray-400" />
             <div>
               <p className="font-semibold text-gray-800 dark:text-gray-200">
                 {deletedEvent.title}

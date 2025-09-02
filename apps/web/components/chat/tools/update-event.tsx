@@ -90,7 +90,7 @@ export function UpdateEventResult({
         </p>
         <div className="flex h-full gap-2">
           {!event.allDay && (
-            <div className="flex w-12 flex-shrink-0 flex-col items-end justify-between py-1 text-xs">
+            <div className="flex w-12 shrink-0 flex-col items-end justify-between py-1 text-xs">
               <p>{formatEventTimeDisplay(startDate.toISOString())}</p>
               <p>{formatEventTimeDisplay(endDate.toISOString())}</p>
             </div>
@@ -133,7 +133,7 @@ export function UpdateEventCall({
           </p>
           <div className="flex items-center gap-2">
             {originalStartTime && originalEndTime && (
-              <div className="flex w-24 flex-shrink-0 flex-col items-end text-xs text-gray-500">
+              <div className="flex w-24 shrink-0 flex-col items-end text-xs text-gray-500">
                 <p>
                   {originalStartTime &&
                     newStartTime &&
@@ -166,7 +166,7 @@ export function UpdateEventCall({
           </p>
           <div className="flex items-center gap-2">
             {newStartTime && newEndTime && (
-              <div className="flex w-24 flex-shrink-0 flex-col items-end text-xs text-gray-500">
+              <div className="flex w-24 shrink-0 flex-col items-end text-xs text-gray-500">
                 <p>
                   {originalStartTime &&
                     newStartTime &&

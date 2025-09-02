@@ -1,16 +1,14 @@
-import { cache } from "react";
-
+import { db, eq, schema } from "@weekday/db";
+import { env } from "@weekday/env";
 import { betterAuth as betterAuthClient } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import {
   toNextJsHandler as betterAuthToNextJsHandler,
   nextCookies,
 } from "better-auth/next-js";
-import { headers } from "next/headers";
 import { multiSession } from "better-auth/plugins";
-
-import { db, schema, eq } from "@weekday/db";
-import { env } from "@weekday/env";
+import { headers } from "next/headers";
+import { cache } from "react";
 
 const betterAuth = betterAuthClient({
   database: drizzleAdapter(db, {
@@ -20,96 +18,37 @@ const betterAuth = betterAuthClient({
   databaseHooks: {
     account: {
       create: {
-        async after(account, ctx) {
+        async after(account) {
           if (account.providerId === "google" && !account.refreshToken) {
             try {
               await db
                 .delete(schema.account)
                 .where(eq(schema.account.id, account.id));
+              console.warn(
+                `🔄 Removed Google account ${account.id} without refresh token`
+              );
             } catch (error) {
               console.error(
                 `❌ Failed to remove problematic account ${account.id}:`,
-                error,
+                error
               );
             }
             return;
           }
 
           if (account.accessToken && account.refreshToken) {
-            const provider = ctx?.context.socialProviders.find(
-              (p) => p.id === account.providerId,
-            );
-
-            if (provider) {
-              const info = await provider.getUserInfo({
-                accessToken: account.accessToken,
-                refreshToken: account.refreshToken,
-                scopes: account.scope?.split(",") ?? [],
-                idToken: account.idToken ?? undefined,
-              });
-
-              if (info?.user) {
-                await db.transaction(async (tx) => {
-                  await tx
-                    .update(schema.account)
-                    .set({
-                      name: info.user.name || "",
-                      email: info.user.email || "",
-                      image: info.user.image,
-                    })
-                    .where(eq(schema.account.id, account.id));
-
-                  await tx
-                    .update(schema.user)
-                    .set({
-                      defaultAccountId: account.id,
-                    })
-                    .where(eq(schema.user.id, account.userId));
-                });
-              }
-            }
-          }
-        },
-      },
-      update: {
-        async after(account, ctx) {
-          if (
-            account.providerId === "google" &&
-            account.accessToken &&
-            account.refreshToken
-          ) {
-            // Check if account needs user info update
-            const existingAccount = await db.query.account.findFirst({
-              where: eq(schema.account.id, account.id),
-            });
-
-            if (
-              existingAccount &&
-              (!existingAccount.name || !existingAccount.email)
-            ) {
-              const provider = ctx?.context.socialProviders.find(
-                (p) => p.id === account.providerId,
+            try {
+              await db
+                .update(schema.user)
+                .set({
+                  defaultAccountId: account.id,
+                })
+                .where(eq(schema.user.id, account.userId));
+            } catch (error) {
+              console.error(
+                `❌ Failed to set default account ${account.id}:`,
+                error
               );
-
-              if (provider) {
-                const info = await provider.getUserInfo({
-                  accessToken: account.accessToken,
-                  refreshToken: account.refreshToken,
-                  scopes: account.scope?.split(",") ?? [],
-                  idToken: account.idToken ?? undefined,
-                });
-
-                if (info?.user) {
-                  await db
-                    .update(schema.account)
-                    .set({
-                      name: info.user.name || "",
-                      email: info.user.email || "",
-                      image: info.user.image,
-                    })
-                    .where(eq(schema.account.id, account.id));
-                }
-              }
             }
           }
         },
@@ -125,29 +64,36 @@ const betterAuth = betterAuthClient({
   session: {
     expiresIn: 60 * 60 * 24 * 14,
     updateAge: 60 * 60 * 24,
+    cookieCache: {
+      enabled: true,
+      maxAge: 60 * 5,
+    },
+  },
+  rateLimit: {
+    enabled: true,
+    window: 60,
+    max: 10,
   },
   socialProviders: {
     google: {
-      accessType: "offline",
       clientId: env.BETTER_AUTH_GOOGLE_ID,
       clientSecret: env.BETTER_AUTH_GOOGLE_SECRET,
+      accessType: "offline",
+      prompt: "consent",
       scope: [
         "openid",
         "email",
         "profile",
         "https://www.googleapis.com/auth/calendar",
       ],
-      redirectUrlParams: {
-        access_type: "offline",
-        prompt: "consent",
+      authorizationUrlParams: {
         include_granted_scopes: "true",
       },
-      prompt: "consent",
-      extraParams: {
-        access_type: "offline",
-        prompt: "consent",
-        include_granted_scopes: "true",
-      },
+      mapProfileToUser: (profile) => ({
+        name: profile.name || "",
+        email: profile.email || "",
+        image: profile.picture,
+      }),
     },
   },
   updateAccountOnSignIn: true,
@@ -165,6 +111,7 @@ const betterAuth = betterAuthClient({
       enabled: true,
       allowDifferentEmails: true,
       trustedProviders: ["google"],
+      autoLink: true,
     },
   },
 });

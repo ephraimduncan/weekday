@@ -26,7 +26,7 @@ export function ChatPromptInput({
 }: ChatPromptInputProps) {
   return (
     <PromptInput
-      className="border-input bg-background w-full max-w-(--breakpoint-md) rounded-[calc(1rem-4px)] border px-3 py-1 pl-1.5 shadow-[0_9px_9px_0px_rgba(0,0,0,0.01),_0_2px_5px_0px_rgba(0,0,0,0.06)]"
+      className="border-input bg-background w-full max-w-(--breakpoint-md) rounded-[calc(1rem-4px)] border px-3 py-1 pl-1.5 shadow-[0_9px_9px_0px_rgba(0,0,0,0.01),0_2px_5px_0px_rgba(0,0,0,0.06)]"
       value={value}
       onSubmit={onSubmit}
       onValueChange={onValueChange}

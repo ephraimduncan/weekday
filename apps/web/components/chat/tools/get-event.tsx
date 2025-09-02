@@ -35,7 +35,7 @@ export function GetEventResult({
             {events.map((event: CalendarEvent) => (
               <div key={event.id} className="flex h-full gap-2">
                 {!event.allDay && (event.start || event.end) && (
-                  <div className="flex w-12 flex-shrink-0 flex-col items-end justify-between py-1 text-xs">
+                  <div className="flex w-12 shrink-0 flex-col items-end justify-between py-1 text-xs">
                     <p>
                       {event.start
                         ? formatEventTimeDisplay(
@@ -106,7 +106,7 @@ export function GetEventResult({
                     {dayEvents.map((event: CalendarEvent) => (
                       <div key={event.id} className="flex h-full gap-2">
                         {!event.allDay && (event.start || event.end) && (
-                          <div className="flex w-12 flex-shrink-0 flex-col items-end justify-between py-1 text-xs">
+                          <div className="flex w-12 shrink-0 flex-col items-end justify-between py-1 text-xs">
                             <p>
                               {event.start
                                 ? formatEventTimeDisplay(

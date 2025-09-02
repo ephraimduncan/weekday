@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "build": "bun with:env next build",
-    "dev": "bun with:env next dev --turbo",
+    "dev": "bun with:env next dev --turbopack",
     "lint": "next lint",
     "lint:fix": "next lint --fix",
     "preview": "bun with:env next build && next start",
@@ -56,11 +56,11 @@
     "lucide-react": "^0.510.0",
     "marked": "^15.0.11",
     "motion": "^12.12.1",
-    "next": "^15.4.0-canary.50",
+    "next": "15.5.2",
     "next-themes": "^0.4.6",
-    "react": "^19.1.0",
+    "react": "19.1.1",
     "react-day-picker": "^9.6.7",
-    "react-dom": "^19.1.0",
+    "react-dom": "19.1.1",
     "react-markdown": "^10.1.0",
     "react-resizable-panels": "^3.0.2",
     "react-scan": "^0.3.3",
@@ -78,26 +78,26 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.1",
-    "@tailwindcss/postcss": "^4.0.15",
+    "@tailwindcss/postcss": "^4.1.12",
     "@tailwindcss/typography": "^0.5.16",
     "@tanstack/react-query-devtools": "^5.76.1",
     "@types/node": "^20.14.10",
-    "@types/react": "19.1.4",
-    "@types/react-dom": "19.1.5",
+    "@types/react": "19.1.12",
+    "@types/react-dom": "19.1.9",
     "eslint": "^9.23.0",
-    "eslint-config-next": "15.3.2",
+    "eslint-config-next": "15.5.2",
     "eslint-plugin-perfectionist": "^4.12.3",
     "eslint-plugin-unused-imports": "^4.1.4",
     "postcss": "^8.5.3",
     "postcss-load-config": "^6.0.1",
     "prettier": "^3.5.3",
-    "prettier-plugin-tailwindcss": "^0.6.11",
-    "tailwindcss": "^4.0.15",
+    "prettier-plugin-tailwindcss": "^0.6.14",
+    "tailwindcss": "^4.1.12",
     "typescript": "^5.8.2",
     "typescript-eslint": "^8.27.0"
   },
   "overrides": {
-    "@types/react": "19.1.4",
-    "@types/react-dom": "19.1.5"
+    "@types/react": "19.1.12",
+    "@types/react-dom": "19.1.9"
   }
 }
