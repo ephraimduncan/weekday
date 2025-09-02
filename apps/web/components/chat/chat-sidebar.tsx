@@ -2,9 +2,9 @@
 
 import { useRef, useState } from "react";
 
-import type { ToolInvocation, Message as UIMessage } from "ai";
-
 import { type UseChatOptions, useChat } from "@ai-sdk/react";
+import type { UIMessage } from "ai";
+import { DefaultChatTransport } from "ai";
 import { nanoid } from "nanoid";
 import { match } from "ts-pattern";
 
@@ -40,39 +40,37 @@ export function ChatSidebar() {
   const bottomRef = useRef<HTMLDivElement>(null);
   const [chatId, setChatId] = useState(nanoid());
 
-  const { input, messages, setInput, setMessages, status, stop, handleSubmit } =
-    useChat({
-      id: chatId,
-      api: "/api/ai/chat",
+  const [input, setInput] = useState("");
 
-      onFinish: (message) => {
-        if (message.parts) {
-          for (const part of message.parts) {
-            if (part.type === "tool-invocation") {
-              const toolInvocation = part.toolInvocation as ToolInvocation;
-              if (
-                toolInvocation.toolName === "createEvent" ||
-                toolInvocation.toolName === "createRecurringEvent" ||
-                toolInvocation.toolName === "updateEvent" ||
-                toolInvocation.toolName === "deleteEvent"
-              ) {
-                utils.calendar.getEvents.invalidate();
-              }
-            }
+  const { messages, sendMessage, setMessages, status, stop } = useChat({
+    id: chatId,
+    transport: new DefaultChatTransport({
+      api: "/api/ai/chat",
+    }),
+
+    onFinish: (message) => {
+      if (message.parts) {
+        for (const part of message.parts) {
+          if (part.type === "tool-createEvent" ||
+              part.type === "tool-createRecurringEvent" ||
+              part.type === "tool-updateEvent" ||
+              part.type === "tool-deleteEvent") {
+            utils.calendar.getEvents.invalidate();
           }
         }
-      },
-      onToolCall: ({ toolCall }) => {
-        if (
-          toolCall.toolName === "createEvent" ||
-          toolCall.toolName === "createRecurringEvent" ||
-          toolCall.toolName === "updateEvent" ||
-          toolCall.toolName === "deleteEvent"
-        ) {
-          utils.calendar.getEvents.invalidate();
-        }
-      },
-    } satisfies UseChatOptions);
+      }
+    },
+    onToolCall: ({ toolCall }) => {
+      if (
+        toolCall.toolName === "createEvent" ||
+        toolCall.toolName === "createRecurringEvent" ||
+        toolCall.toolName === "updateEvent" ||
+        toolCall.toolName === "deleteEvent"
+      ) {
+        utils.calendar.getEvents.invalidate();
+      }
+    },
+  } satisfies UseChatOptions);
 
   const handleFormSubmit = (e?: React.FormEvent<HTMLFormElement>) => {
     e?.preventDefault();
@@ -80,7 +78,8 @@ export function ChatSidebar() {
       return;
     }
 
-    handleSubmit(e);
+    sendMessage({ text: input });
+    setInput("");
   };
 
   const handleNewChat = () => {
@@ -116,240 +115,193 @@ export function ChatSidebar() {
               <Message key={message.id}>
                 <div className="flex-1 space-y-2">
                   {message.parts?.map((part, index) => {
-                    const toolInvocation =
-                      part.type === "tool-invocation"
-                        ? (part.toolInvocation as ToolInvocation)
-                        : undefined;
-                    const toolCallId = toolInvocation?.toolCallId;
-
-                    return match(part)
-                      .with({ type: "text" }, ({ text }) =>
-                        match(isAssistant)
-                          .with(true, () => (
-                            <div
-                              key={`${message.id}-text-${index}`}
-                              className="text-foreground prose rounded-lg p-2"
-                            >
-                              <Markdown className="prose dark:prose-invert">
-                                {String(text)}
-                              </Markdown>
-                            </div>
-                          ))
-                          .with(false, () => (
-                            <MessageContent
-                              key={`${message.id}-text-${index}`}
-                              className="bg-sidebar text-primary-foreground dark:text-foreground prose-invert"
-                              markdown
-                            >
-                              {String(text)}
-                            </MessageContent>
-                          ))
-                          .exhaustive(),
-                      )
-                      .with(
-                        {
-                          toolInvocation: {
-                            state: "call",
-                            toolName: "getEvents",
-                          },
-                          type: "tool-invocation",
-                        },
-                        () => <GetEventCall key={toolCallId} />,
-                      )
-                      .with(
-                        {
-                          toolInvocation: {
-                            state: "result",
-                            toolName: "getEvents",
-                          },
-                          type: "tool-invocation",
-                        },
-                        ({ toolInvocation }) => (
-                          <GetEventResult
-                            key={toolCallId}
-                            toolInvocation={toolInvocation as ToolInvocation}
-                          />
-                        ),
-                      )
-                      .with(
-                        {
-                          toolInvocation: {
-                            state: "call",
-                            toolName: "createEvent",
-                          },
-                          type: "tool-invocation",
-                        },
-                        () => <CreateEventCall key={toolCallId} />,
-                      )
-                      .with(
-                        {
-                          toolInvocation: {
-                            state: "result",
-                            toolName: "createEvent",
-                          },
-                          type: "tool-invocation",
-                        },
-                        ({ toolInvocation }) => (
-                          <CreateEventResult
-                            key={toolCallId}
-                            toolInvocation={toolInvocation as ToolInvocation}
-                          />
-                        ),
-                      )
-                      .with(
-                        {
-                          toolInvocation: {
-                            state: "call",
-                            toolName: "createRecurringEvent",
-                          },
-                          type: "tool-invocation",
-                        },
-                        () => <CreateRecurringEventCall key={toolCallId} />,
-                      )
-                      .with(
-                        {
-                          toolInvocation: {
-                            state: "result",
-                            toolName: "createRecurringEvent",
-                          },
-                          type: "tool-invocation",
-                        },
-                        ({ toolInvocation }) => (
-                          <CreateRecurringEventResult
-                            key={toolCallId}
-                            toolInvocation={toolInvocation as ToolInvocation}
-                          />
-                        ),
-                      )
-                      .with(
-                        {
-                          toolInvocation: {
-                            state: "call",
-                            toolName: "updateEvent",
-                          },
-                          type: "tool-invocation",
-                        },
-                        ({ toolInvocation }) => (
-                          <UpdateEventCall
-                            key={toolCallId}
-                            toolInvocation={toolInvocation as ToolInvocation}
-                          />
-                        ),
-                      )
-                      .with(
-                        {
-                          toolInvocation: {
-                            state: "result",
-                            toolName: "updateEvent",
-                          },
-                          type: "tool-invocation",
-                        },
-                        ({ toolInvocation }) => (
-                          <UpdateEventResult
-                            key={toolCallId}
-                            message={message}
-                            toolInvocation={toolInvocation as ToolInvocation}
-                          />
-                        ),
-                      )
-                      .with(
-                        {
-                          toolInvocation: {
-                            state: "call",
-                            toolName: "getNextUpcomingEvent",
-                          },
-                          type: "tool-invocation",
-                        },
-                        () => <GetUpcomingEventCall key={toolCallId} />,
-                      )
-                      .with(
-                        {
-                          toolInvocation: {
-                            state: "result",
-                            toolName: "getNextUpcomingEvent",
-                          },
-                          type: "tool-invocation",
-                        },
-                        ({ toolInvocation }) => (
-                          <GetUpcomingEventResult
-                            key={toolCallId}
-                            toolInvocation={toolInvocation as ToolInvocation}
-                          />
-                        ),
-                      )
-                      .with(
-                        {
-                          toolInvocation: {
-                            state: "call",
-                            toolName: "getFreeSlots",
-                          },
-                          type: "tool-invocation",
-                        },
-                        () => <GetFreeSlotsCall key={toolCallId} />,
-                      )
-                      .with(
-                        {
-                          toolInvocation: {
-                            state: "result",
-                            toolName: "getFreeSlots",
-                          },
-                          type: "tool-invocation",
-                        },
-                        ({ toolInvocation }) => (
-                          <GetFreeSlotsResult
-                            key={toolCallId}
-                            toolInvocation={toolInvocation as ToolInvocation}
-                          />
-                        ),
-                      )
-                      .with(
-                        {
-                          toolInvocation: {
-                            state: "call",
-                            toolName: "deleteEvent",
-                          },
-                          type: "tool-invocation",
-                        },
-                        () => <DeleteEventCall key={toolCallId} />,
-                      )
-                      .with(
-                        {
-                          toolInvocation: {
-                            state: "result",
-                            toolName: "deleteEvent",
-                          },
-                          type: "tool-invocation",
-                        },
-                        ({ toolInvocation }) => (
-                          <DeleteEventResult
-                            key={toolCallId}
-                            toolInvocation={toolInvocation as ToolInvocation}
-                          />
-                        ),
-                      )
-                      .otherwise(() => null);
-                  })}
-
-                  {message.parts?.length === 0 && (
-                    <>
-                      {match(isAssistant)
+                    // Handle different part types
+                    if (part.type === "text") {
+                      const key = `${message.id}-text-${index}`;
+                      return match(isAssistant)
                         .with(true, () => (
-                          <div className="bg-secondary text-foreground prose rounded-lg p-2">
+                          <div
+                            key={key}
+                            className="text-foreground prose rounded-lg p-2"
+                          >
                             <Markdown className="prose dark:prose-invert">
-                              {String(message.content || "")}
+                              {String(part.text)}
                             </Markdown>
                           </div>
                         ))
                         .with(false, () => (
                           <MessageContent
-                            className="bg-primary text-primary-foreground prose-invert"
+                            key={key}
+                            className="bg-sidebar text-primary-foreground dark:text-foreground prose-invert"
                             markdown
                           >
-                            {String(message.content || "")}
+                            {String(part.text)}
                           </MessageContent>
                         ))
-                        .exhaustive()}
-                    </>
+                        .exhaustive();
+                    }
+
+                    // Handle tool parts - these now use specific tool names in the type
+                    return match(part.type)
+                      // Handle getEvents tool
+                      .with("tool-getEvents", () => {
+                        if (part.state === "input-available") {
+                          return <GetEventCall key={`${message.id}-${index}`} />;
+                        } else if (part.state === "output-available") {
+                          return (
+                            <GetEventResult
+                              key={`${message.id}-${index}`}
+                              toolInvocation={{
+                                toolName: "getEvents",
+                                state: "result",
+                                result: part.output,
+                                toolCallId: part.toolCallId || "",
+                                args: part.input
+                              }}
+                            />
+                          );
+                        }
+                        return null;
+                      })
+                      // Handle createEvent tool
+                      .with("tool-createEvent", () => {
+                        if (part.state === "input-available") {
+                          return <CreateEventCall key={`${message.id}-${index}`} />;
+                        } else if (part.state === "output-available") {
+                          return (
+                            <CreateEventResult
+                              key={`${message.id}-${index}`}
+                              toolInvocation={{
+                                toolName: "createEvent",
+                                state: "result",
+                                result: part.output,
+                                toolCallId: part.toolCallId || "",
+                                args: part.input
+                              }}
+                            />
+                          );
+                        }
+                        return null;
+                      })
+                      // Handle createRecurringEvent tool
+                      .with("tool-createRecurringEvent", () => {
+                        if (part.state === "input-available") {
+                          return <CreateRecurringEventCall key={`${message.id}-${index}`} />;
+                        } else if (part.state === "output-available") {
+                          return (
+                            <CreateRecurringEventResult
+                              key={`${message.id}-${index}`}
+                              toolInvocation={{
+                                toolName: "createRecurringEvent",
+                                state: "result",
+                                result: part.output,
+                                toolCallId: part.toolCallId || "",
+                                args: part.input
+                              }}
+                            />
+                          );
+                        }
+                        return null;
+                      })
+                      // Handle updateEvent tool
+                      .with("tool-updateEvent", () => {
+                        if (part.state === "input-available") {
+                          return (
+                            <UpdateEventCall
+                              key={`${message.id}-${index}`}
+                              toolInvocation={{
+                                toolName: "updateEvent",
+                                state: "call",
+                                result: undefined,
+                                toolCallId: part.toolCallId || "",
+                                args: part.input
+                              }}
+                            />
+                          );
+                        } else if (part.state === "output-available") {
+                          return (
+                            <UpdateEventResult
+                              key={`${message.id}-${index}`}
+                              message={message}
+                              toolInvocation={{
+                                toolName: "updateEvent",
+                                state: "result",
+                                result: part.output,
+                                toolCallId: part.toolCallId || "",
+                                args: part.input
+                              }}
+                            />
+                          );
+                        }
+                        return null;
+                      })
+                      // Handle getNextUpcomingEvent tool
+                      .with("tool-getNextUpcomingEvent", () => {
+                        if (part.state === "input-available") {
+                          return <GetUpcomingEventCall key={`${message.id}-${index}`} />;
+                        } else if (part.state === "output-available") {
+                          return (
+                            <GetUpcomingEventResult
+                              key={`${message.id}-${index}`}
+                              toolInvocation={{
+                                toolName: "getNextUpcomingEvent",
+                                state: "result",
+                                result: part.output,
+                                toolCallId: part.toolCallId || "",
+                                args: part.input
+                              }}
+                            />
+                          );
+                        }
+                        return null;
+                      })
+                      // Handle getFreeSlots tool
+                      .with("tool-getFreeSlots", () => {
+                        if (part.state === "input-available") {
+                          return <GetFreeSlotsCall key={`${message.id}-${index}`} />;
+                        } else if (part.state === "output-available") {
+                          return (
+                            <GetFreeSlotsResult
+                              key={`${message.id}-${index}`}
+                              toolInvocation={{
+                                toolName: "getFreeSlots",
+                                state: "result",
+                                result: part.output,
+                                toolCallId: part.toolCallId || "",
+                                args: part.input
+                              }}
+                            />
+                          );
+                        }
+                        return null;
+                      })
+                      // Handle deleteEvent tool
+                      .with("tool-deleteEvent", () => {
+                        if (part.state === "input-available") {
+                          return <DeleteEventCall key={`${message.id}-${index}`} />;
+                        } else if (part.state === "output-available") {
+                          return (
+                            <DeleteEventResult
+                              key={`${message.id}-${index}`}
+                              toolInvocation={{
+                                toolName: "deleteEvent",
+                                state: "result",
+                                result: part.output,
+                                toolCallId: part.toolCallId || "",
+                                args: part.input
+                              }}
+                            />
+                          );
+                        }
+                        return null;
+                      })
+                      .otherwise(() => null);
+                  })}
+
+                  {message.parts?.length === 0 && (
+                    <div className="text-muted-foreground text-sm italic p-2">
+                      No content available
+                    </div>
                   )}
                 </div>
               </Message>

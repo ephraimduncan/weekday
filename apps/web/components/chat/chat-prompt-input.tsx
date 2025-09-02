@@ -54,7 +54,7 @@ export function ChatPromptInput({
             size="icon"
             variant="default"
             className="h-9 w-9 rounded-full p-1 [&_svg]:size-6"
-            disabled={isLoading || !value.trim()}
+            // disabled={isLoading || !value.trim()}
             onClick={onSubmit}
           >
             {isLoading ? <Square /> : <ArrowUp />}

@@ -1,4 +1,13 @@
-import type { Message, ToolInvocation } from "ai";
+import type { UIMessage } from "ai";
+
+// Compatibility type for migrating from old ToolInvocation
+type ToolInvocation = {
+  toolName: string;
+  state: string;
+  result?: any;
+  args?: any;
+  toolCallId: string;
+};
 
 import { format } from "date-fns";
 import { CalendarDays } from "lucide-react";
@@ -14,7 +23,7 @@ export function UpdateEventResult({
   message,
   toolInvocation,
 }: {
-  message: Message;
+  message: UIMessage;
   toolInvocation: ToolInvocation;
 }) {
   if (toolInvocation.state !== "result" || !toolInvocation.result) {
