@@ -11,9 +11,6 @@ const config = {
   //   optimizePackageImports: ["@radix-ui/react-select"],
   //   scrollRestoration: true,
   // },
-  experimental: {
-    nodeMiddleware: true,
-  },
   images: {
     remotePatterns: [
       {
