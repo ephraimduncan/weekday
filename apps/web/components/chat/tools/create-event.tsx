@@ -80,7 +80,7 @@ export function CreateEventResult({
       </div>
       <div className="flex h-full gap-2">
         {!event.allDay && (event.start || event.end) && (
-          <div className="flex w-12 flex-shrink-0 flex-col items-end justify-between py-1 text-xs">
+          <div className="flex w-12 shrink-0 flex-col items-end justify-between py-1 text-xs">
             <p>
               {event.start
                 ? formatEventTimeDisplay(new Date(event.start).toISOString())
@@ -155,7 +155,7 @@ export function CreateRecurringEventResult({
       </div>
       <div className="flex h-full gap-2">
         {!event.allDay && (event.start || event.end) && (
-          <div className="flex w-12 flex-shrink-0 flex-col items-end justify-between py-1 text-xs">
+          <div className="flex w-12 shrink-0 flex-col items-end justify-between py-1 text-xs">
             <p>
               {event.start
                 ? formatEventTimeDisplay(new Date(event.start).toISOString())

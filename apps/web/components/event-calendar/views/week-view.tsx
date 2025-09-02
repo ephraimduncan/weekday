@@ -351,7 +351,7 @@ export const WeekView = React.memo(function WeekView({
         {hours.map((hour) => (
           <div
             key={hour.toString()}
-            className="border-border/70 relative h-[var(--week-cells-height)] border-b last:border-b-0"
+            className="border-border/70 relative h-(--week-cells-height) border-b last:border-b-0"
           >
             {renderCellQuarters(hour, day)}
           </div>
@@ -427,7 +427,7 @@ export const WeekView = React.memo(function WeekView({
           {hours.map((hour, index) => (
             <div
               key={hour.toString()}
-              className="border-border/70 relative h-[var(--week-cells-height)] border-b last:border-b-0"
+              className="border-border/70 relative h-(--week-cells-height) border-b last:border-b-0"
             >
               {index > 0 && (
                 <span className="bg-background text-muted-foreground/70 absolute -top-3 left-0 flex h-6 w-16 max-w-full items-center justify-end pe-2 text-[10px] sm:pe-4 sm:text-xs">

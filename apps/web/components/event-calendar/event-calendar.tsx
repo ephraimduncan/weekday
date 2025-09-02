@@ -280,10 +280,10 @@ export function EventCalendar({
     } else if (view === "day") {
       return (
         <>
-          <span className="min-sm:hidden" aria-hidden="true">
+          <span className="sm:hidden" aria-hidden="true">
             {format(currentDate, "MMM d, yyyy")}
           </span>
-          <span className="max-sm:hidden min-md:hidden" aria-hidden="true">
+          <span className="max-sm:hidden md:hidden" aria-hidden="true">
             {format(currentDate, "MMMM d, yyyy")}
           </span>
           <span className="max-md:hidden">
