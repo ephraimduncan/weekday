@@ -63,7 +63,7 @@ export const HeroSection = async () => {
                   className="relative z-2 rounded-2xl"
                   alt="Weekday Calendar Interface"
                   height="2240"
-                  src="/weekday-light.PNG"
+                  src="/weekday-light.png"
                   width="1376"
                 />
               </div>
