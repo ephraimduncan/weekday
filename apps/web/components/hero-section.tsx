@@ -4,14 +4,13 @@ import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
 
-import weekdayLightImage from "../public/weekday-light.png";
 import { Header } from "./header";
+
+import weekdayLightImage from "/public/weekday-light.png";
 
 export const HeroSection = async () => {
   const session = await auth();
   const user = session?.user;
-
-  console.log(weekdayLightImage);
 
   return (
     <>
