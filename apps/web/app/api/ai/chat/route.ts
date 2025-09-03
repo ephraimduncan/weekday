@@ -38,6 +38,12 @@ export async function POST(req: Request) {
       experimental_transform: smoothStream({ chunking: "word" }),
       messages: convertToModelMessages(messages),
       model: "openai/gpt-5-mini",
+      providerOptions: {
+        openai: {
+          reasoningEffort: "low",
+          reasoningSummary: "auto",
+        },
+      },
       stopWhen: stepCountIs(25),
       system: systemPrompt({ currentDate, formattedDate, timezone }),
       tools: {
@@ -57,6 +63,7 @@ export async function POST(req: Request) {
 
     return result.toUIMessageStreamResponse({
       generateMessageId: uuidv7,
+      sendReasoning: true,
     });
   } catch (error) {
     console.error("Error in chat API:", error);

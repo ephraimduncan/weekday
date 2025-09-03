@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useState } from "react";
 
 import type { ToolUIPart, UIMessage } from "ai";
 
@@ -9,11 +9,21 @@ import { DefaultChatTransport } from "ai";
 import { nanoid } from "nanoid";
 import { match } from "ts-pattern";
 
-import { ChatContainer } from "@/components/prompt-kit/chat-container";
-import { Markdown } from "@/components/prompt-kit/markdown";
-import { Message, MessageContent } from "@/components/prompt-kit/message";
-import { ScrollButton } from "@/components/prompt-kit/scroll-button";
+import {
+  Conversation,
+  ConversationContent,
+  ConversationScrollButton,
+} from "@/components/ai/conversation";
+import { Message, MessageContent } from "@/components/ai/message";
+import {
+  Reasoning,
+  ReasoningContent,
+  ReasoningTrigger,
+} from "@/components/ai/reasoning";
+import { Response } from "@/components/ai/response";
+import { Suggestion, Suggestions } from "@/components/ai/suggestion";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { useChat as useChatProvider } from "@/providers/chat-provider";
 import { api } from "@/trpc/react";
 
@@ -34,15 +44,11 @@ import {
 import { UpdateEventCall, UpdateEventResult } from "./tools/update-event";
 
 export function ChatSidebar() {
-  const { isChatOpen } = useChatProvider();
   const utils = api.useUtils();
-
-  const containerRef = useRef<HTMLDivElement>(null);
-  const bottomRef = useRef<HTMLDivElement>(null);
   const [chatId, setChatId] = useState(nanoid());
-
   const [input, setInput] = useState("");
 
+  const { isChatOpen } = useChatProvider();
   const { messages, sendMessage, setMessages, status, stop } = useChat({
     id: chatId,
     transport: new DefaultChatTransport({
@@ -92,13 +98,22 @@ export function ChatSidebar() {
 
   const isLoading = status === "submitted" || status === "streaming";
 
+  const suggestions = [
+    "Find free time next week",
+    "What events do I have today?",
+  ];
+
+  const handleSuggestionClick = (suggestion: string) => {
+    sendMessage({ text: suggestion });
+  };
+
   if (!isChatOpen) {
     return null;
   }
 
   return (
-    <div className="bg-background flex h-full flex-1 flex-col gap-4 rounded-lg pt-0">
-      <div className="relative flex h-[calc(100vh-1rem)] w-full flex-col overflow-hidden">
+    <div className="bg-background flex h-full w-full flex-1 flex-col gap-4 rounded-lg pt-0">
+      <div className="relative flex h-full w-full flex-col overflow-hidden">
         <div className="flex w-full items-center justify-between border-b p-3">
           <div />
           <Button size="sm" onClick={handleNewChat}>
@@ -106,113 +121,118 @@ export function ChatSidebar() {
           </Button>
         </div>
 
-        <ChatContainer
-          ref={containerRef}
-          className="flex-1 space-y-4 border-t p-4"
-          scrollToRef={bottomRef}
-        >
-          {messages.map((message: UIMessage) => {
-            const isAssistant = message.role === "assistant";
-
-            console.log(message);
-
-            return (
-              <Message key={message.id}>
-                <div className="flex-1 space-y-2">
-                  {message.parts?.map((part, index) => {
-                    if (part.type === "text") {
-                      const key = `${message.id}-text-${index}`;
-                      return match(isAssistant)
-                        .with(true, () => (
-                          <div
-                            key={key}
-                            className="text-foreground prose rounded-lg p-2"
-                          >
-                            <Markdown className="prose dark:prose-invert">
-                              {String(part.text)}
-                            </Markdown>
-                          </div>
-                        ))
-                        .with(false, () => (
+        <Conversation className="flex-1 border-t">
+          <ConversationContent>
+            {messages.map((message: UIMessage, index: number) => {
+              return (
+                <Message
+                  key={`${message.id}-${index}`}
+                  className={cn("py-2", {
+                    "gap-1 text-justify [&>div]:max-w-[100%]":
+                      message.role === "assistant",
+                  })}
+                  from={message.role}
+                >
+                  <div className="flex-1 space-y-2">
+                    {message.parts?.map((part, index) => {
+                      if (part.type === "text") {
+                        return (
                           <MessageContent
-                            key={key}
-                            className="bg-sidebar text-primary-foreground dark:text-foreground prose-invert"
-                            markdown
+                            key={`${message.id}-text-${index}`}
+                            className={cn({
+                              "mb-4 bg-transparent! p-0 text-base":
+                                message.role === "assistant",
+                              "rounded-xl p-2! pl-2.5!":
+                                message.role === "user",
+                            })}
                           >
-                            {String(part.text)}
+                            <Response>{String(part.text)}</Response>
                           </MessageContent>
-                        ))
-                        .exhaustive();
-                    }
+                        );
+                      }
 
-                    return (
-                      match(part.type)
+                      if (part.type === "reasoning") {
+                        return (
+                          <Reasoning
+                            key={`${message.id}-reasoning-${index}`}
+                            isStreaming={part.state === "streaming"}
+                          >
+                            <ReasoningTrigger />
+                            <ReasoningContent className="mt-2 pl-5 [&>div]:space-y-[0]">
+                              {String(part.text)}
+                            </ReasoningContent>
+                          </Reasoning>
+                        );
+                      }
+
+                      return match(part.type)
                         .with("tool-getEvents", () => {
                           const toolPart = part as ToolUIPart;
                           if (toolPart.state === "input-available") {
                             return (
-                              <GetEventCall key={`${message.id}-${index}`} />
+                              <GetEventCall
+                                key={`${message.id}-getEvents-${index}`}
+                              />
                             );
                           } else if (toolPart.state === "output-available") {
                             return (
                               <GetEventResult
-                                key={`${message.id}-${index}`}
+                                key={`${message.id}-getEventsResult-${index}`}
                                 toolInvocation={toolPart}
                               />
                             );
                           }
                           return null;
                         })
-                        // Handle createEvent tool
                         .with("tool-createEvent", () => {
                           const toolPart = part as ToolUIPart;
                           if (toolPart.state === "input-available") {
                             return (
-                              <CreateEventCall key={`${message.id}-${index}`} />
+                              <CreateEventCall
+                                key={`${message.id}-createEvent-${index}`}
+                              />
                             );
                           } else if (toolPart.state === "output-available") {
                             return (
                               <CreateEventResult
-                                key={`${message.id}-${index}`}
+                                key={`${message.id}-createEventResult-${index}`}
                                 toolInvocation={toolPart}
                               />
                             );
                           }
                           return null;
                         })
-                        // Handle createRecurringEvent tool
                         .with("tool-createRecurringEvent", () => {
                           const toolPart = part as ToolUIPart;
                           if (toolPart.state === "input-available") {
                             return (
                               <CreateRecurringEventCall
-                                key={`${message.id}-${index}`}
+                                key={`${message.id}-createRecurringEvent-${index}`}
                               />
                             );
                           } else if (toolPart.state === "output-available") {
                             return (
                               <CreateRecurringEventResult
-                                key={`${message.id}-${index}`}
+                                key={`${message.id}-createRecurringEventResult-${index}`}
                                 toolInvocation={toolPart}
                               />
                             );
                           }
                           return null;
                         })
-                        // Handle updateEvent tool
                         .with("tool-updateEvent", () => {
                           const toolPart = part as ToolUIPart;
                           if (toolPart.state === "input-available") {
                             return (
                               <UpdateEventCall
-                                key={`${message.id}-${index}`}
+                                key={`${message.id}-updateEvent-${index}`}
                                 toolInvocation={toolPart}
                               />
                             );
                           } else if (toolPart.state === "output-available") {
                             return (
                               <UpdateEventResult
-                                key={`${message.id}-${index}`}
+                                key={`${message.id}-updateEventResult-${index}`}
                                 message={message}
                                 toolInvocation={toolPart}
                               />
@@ -220,91 +240,89 @@ export function ChatSidebar() {
                           }
                           return null;
                         })
-                        // Handle getNextUpcomingEvent tool
                         .with("tool-getNextUpcomingEvent", () => {
                           const toolPart = part as ToolUIPart;
                           if (toolPart.state === "input-available") {
                             return (
                               <GetUpcomingEventCall
-                                key={`${message.id}-${index}`}
+                                key={`${message.id}-getNextUpcomingEvent-${index}`}
                               />
                             );
                           } else if (toolPart.state === "output-available") {
                             return (
                               <GetUpcomingEventResult
-                                key={`${message.id}-${index}`}
+                                key={`${message.id}-getNextUpcomingEventResult-${index}`}
                                 toolInvocation={toolPart}
                               />
                             );
                           }
                           return null;
                         })
-                        // Handle getFreeSlots tool
                         .with("tool-getFreeSlots", () => {
                           const toolPart = part as ToolUIPart;
                           if (toolPart.state === "input-available") {
                             return (
                               <GetFreeSlotsCall
-                                key={`${message.id}-${index}`}
+                                key={`${message.id}-getFreeSlots-${index}`}
                               />
                             );
                           } else if (toolPart.state === "output-available") {
                             return (
                               <GetFreeSlotsResult
-                                key={`${message.id}-${index}`}
+                                key={`${message.id}-getFreeSlotsResult-${index}`}
                                 toolInvocation={toolPart}
                               />
                             );
                           }
                           return null;
                         })
-                        // Handle deleteEvent tool
                         .with("tool-deleteEvent", () => {
                           const toolPart = part as ToolUIPart;
                           if (toolPart.state === "input-available") {
                             return (
-                              <DeleteEventCall key={`${message.id}-${index}`} />
+                              <DeleteEventCall
+                                key={`${message.id}-deleteEvent-${index}`}
+                              />
                             );
                           } else if (toolPart.state === "output-available") {
                             return (
                               <DeleteEventResult
-                                key={`${message.id}-${index}`}
+                                key={`${message.id}-deleteEventResult-${index}`}
                                 toolInvocation={toolPart}
                               />
                             );
                           }
                           return null;
                         })
-                        .otherwise(() => null)
-                    );
-                  })}
+                        .otherwise(() => null);
+                    })}
+                  </div>
+                </Message>
+              );
+            })}
+          </ConversationContent>
+          <ConversationScrollButton className="shadow-sm" />
+        </Conversation>
 
-                  {message.parts?.length === 0 && (
-                    <div className="text-muted-foreground p-2 text-sm italic">
-                      No content available
-                    </div>
-                  )}
-                </div>
-              </Message>
-            );
-          })}
-          <div ref={bottomRef} />
-        </ChatContainer>
+        <div className="px-4 pt-4">
+          <Suggestions>
+            {suggestions.map((s) => (
+              <Suggestion
+                key={s}
+                onClick={handleSuggestionClick}
+                suggestion={s}
+              />
+            ))}
+          </Suggestions>
+        </div>
 
         <div className="border-border relative border-t p-2">
           <ChatPromptInput
             value={input}
+            onStop={stop}
             onSubmit={handleFormSubmit}
             onValueChange={setInput}
-            isLoading={isLoading}
-          />
-        </div>
-
-        <div className="absolute right-7 bottom-20">
-          <ScrollButton
-            className="shadow-sm"
-            containerRef={containerRef}
-            scrollRef={bottomRef}
+            status={status}
           />
         </div>
       </div>

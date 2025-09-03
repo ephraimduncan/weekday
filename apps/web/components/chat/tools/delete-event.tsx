@@ -72,20 +72,7 @@ export function DeleteEventResult({ toolInvocation }: DeleteEventResultProps) {
     return null;
   }
 
-  const result = toolInvocation.output as {
-    success: boolean;
-    attemptedEventDetails?: { title?: string };
-    deletedEvent?: {
-      id: string;
-      end: string;
-      start: string;
-      title: string;
-      allDay?: boolean;
-    };
-    error?: string;
-    eventId?: string;
-    message?: string;
-  };
+  const result = toolInvocation.output as any;
 
   const {
     attemptedEventDetails,
