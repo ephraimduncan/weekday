@@ -1,4 +1,5 @@
-import { type ToolInvocation } from "ai";
+import type { ToolUIPart } from "ai";
+
 import { differenceInMinutes, format, parseISO } from "date-fns";
 import { Clock } from "lucide-react";
 
@@ -9,7 +10,7 @@ interface TimeSlot {
 
 export function GetFreeSlotsCall() {
   return (
-    <div className="flex items-center gap-2 p-2">
+    <div className="flex items-center gap-2">
       <Clock className="h-4 w-4 text-gray-500" />
       <p className="font-medium text-gray-700 dark:text-gray-300">
         Checking available time slots...
@@ -21,9 +22,19 @@ export function GetFreeSlotsCall() {
 export function GetFreeSlotsResult({
   toolInvocation,
 }: {
-  toolInvocation: ToolInvocation & { result?: any };
+  toolInvocation: ToolUIPart;
 }) {
-  const result = toolInvocation.result;
+  if (toolInvocation.state !== "output-available" || !toolInvocation.output) {
+    return null;
+  }
+
+  const result = toolInvocation.output as {
+    error?: string;
+    freeBusyData?: Array<{
+      end: string;
+      start: string;
+    }>;
+  };
 
   if (
     !result ||
@@ -33,7 +44,7 @@ export function GetFreeSlotsResult({
     result.freeBusyData.length === 0
   ) {
     return (
-      <div className="flex flex-col gap-2 px-2 py-3">
+      <div className="flex flex-col gap-2 py-2">
         <div className="flex items-center gap-2">
           <Clock className="h-4 w-4 text-gray-500" />
           <p className="font-medium text-gray-700 dark:text-gray-300">
@@ -51,7 +62,7 @@ export function GetFreeSlotsResult({
 
   if (!slots || slots.length === 0) {
     return (
-      <div className="flex flex-col gap-2 px-2 py-3">
+      <div className="flex flex-col gap-2 py-2">
         <div className="flex items-center gap-2">
           <Clock className="h-4 w-4 text-gray-500" />
           <p className="font-medium text-gray-700 dark:text-gray-300">
@@ -72,7 +83,7 @@ export function GetFreeSlotsResult({
       : "";
 
   return (
-    <div className="flex flex-col gap-2 px-2 py-3">
+    <div className="flex flex-col gap-2 py-2">
       <div className="flex items-center gap-2">
         <Clock className="h-4 w-4 text-gray-500" />
         <p className="font-medium text-gray-700 dark:text-gray-300">

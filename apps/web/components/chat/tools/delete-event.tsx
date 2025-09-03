@@ -1,4 +1,4 @@
-import type { ToolInvocation } from "ai";
+import type { ToolUIPart } from "ai";
 
 import { CheckCircle, Hourglass, Trash2, XCircle } from "lucide-react";
 
@@ -45,7 +45,7 @@ export function DeleteEventCall(_props: DeleteEventCallProps) {
 }
 
 export interface DeleteEventResultProps {
-  toolInvocation: ToolInvocation;
+  toolInvocation: ToolUIPart;
 }
 
 interface DeletedEventDetails {
@@ -68,11 +68,11 @@ interface DeleteEventToolResult {
 }
 
 export function DeleteEventResult({ toolInvocation }: DeleteEventResultProps) {
-  if (toolInvocation.state !== "result" || !toolInvocation.result) {
+  if (toolInvocation.state !== "output-available" || !toolInvocation.output) {
     return null;
   }
 
-  const result = toolInvocation.result as DeleteEventToolResult;
+  const result = toolInvocation.output as any;
 
   const {
     attemptedEventDetails,

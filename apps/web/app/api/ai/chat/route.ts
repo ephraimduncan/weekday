@@ -1,7 +1,11 @@
-import { smoothStream, streamText } from "ai";
+import {
+  convertToModelMessages,
+  smoothStream,
+  stepCountIs,
+  streamText,
+} from "ai";
 import { v7 as uuidv7 } from "uuid";
 
-import { models } from "@/lib/ai/models";
 import { systemPrompt } from "@/lib/ai/system-prompt";
 import {
   createEvent,
@@ -31,11 +35,16 @@ export async function POST(req: Request) {
     const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
     const result = streamText({
-      experimental_generateMessageId: uuidv7,
       experimental_transform: smoothStream({ chunking: "word" }),
-      maxSteps: 25,
-      messages,
-      model: models.google,
+      messages: convertToModelMessages(messages),
+      model: "openai/gpt-5-mini",
+      providerOptions: {
+        openai: {
+          reasoningEffort: "low",
+          reasoningSummary: "auto",
+        },
+      },
+      stopWhen: stepCountIs(25),
       system: systemPrompt({ currentDate, formattedDate, timezone }),
       tools: {
         createEvent,
@@ -52,7 +61,10 @@ export async function POST(req: Request) {
       },
     });
 
-    return result.toDataStreamResponse();
+    return result.toUIMessageStreamResponse({
+      generateMessageId: uuidv7,
+      sendReasoning: true,
+    });
   } catch (error) {
     console.error("Error in chat API:", error);
     return new Response("An error occurred processing your request.", {

@@ -1,6 +1,12 @@
+import type { Session } from "@weekday/auth";
+
 import { betterFetch } from "@better-fetch/fetch";
-import { type Session } from "@weekday/auth";
-import { NextRequest, NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
+
+export const config = {
+  matcher: ["/calendar/:path*", "/login", "/signup"],
+  runtime: "nodejs",
+};
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -25,8 +31,3 @@ export async function middleware(request: NextRequest) {
 
   return NextResponse.next();
 }
-
-export const config = {
-  matcher: ["/calendar/:path*", "/login", "/signup"],
-  runtime: "nodejs",
-};

@@ -4,7 +4,7 @@ import { ProcessedCalendarEventSchema } from "@weekday/lib";
 import { api } from "@weekday/web/trpc/server";
 import { tool } from "ai";
 import { headers } from "next/headers";
-import { z } from "zod";
+import { z } from "zod/v3";
 
 type ProcessedCalendarEvent = z.infer<typeof ProcessedCalendarEventSchema>;
 
@@ -28,11 +28,11 @@ async function getActiveAccountId(): Promise<string | undefined> {
 export const getEvents = tool({
   description:
     "Retrieve calendar events within a date and optionally time range",
-  parameters: z.object({
+  inputSchema: z.object({
     end: z
       .string()
       .describe(
-        "End date in ISO 8601 format (YYYY-MM-DD). If endTime is also provided, this should be the full ISO 8601 date-time string.",
+        "End date in ISO 8601 format (YYYY-MM-DD or YYYY-MM-DDTHH:mm:ss). Time will be added if not provided. Ensure proper date format.",
       ),
     endTime: z
       .string()
@@ -50,7 +50,7 @@ export const getEvents = tool({
     start: z
       .string()
       .describe(
-        "Start date in ISO 8601 format (YYYY-MM-DD). If startTime is also provided, this should be the full ISO 8601 date-time string.",
+        "Start date in ISO 8601 format (YYYY-MM-DD or YYYY-MM-DDTHH:mm:ss). Time will be added if not provided. Ensure proper date format.",
       ),
     startTime: z
       .string()
@@ -63,18 +63,40 @@ export const getEvents = tool({
     try {
       const activeAccountId = await getActiveAccountId();
 
-      let fullEnd, fullStart;
+      // Parse and normalize dates to ensure proper ISO 8601 format
+      let fullStart: string;
+      let fullEnd: string;
 
+      // Handle start date/time
       if (start.includes("T")) {
-        fullStart = start;
+        // Already has time, ensure it's valid ISO
+        fullStart = new Date(start).toISOString();
       } else {
-        fullStart = startTime ? `${start}${startTime}` : `${start}T00:00:00`;
+        // Date only, add time
+        const startDateTime = startTime
+          ? `${start}T${startTime.replace(/^T/, "")}`
+          : `${start}T00:00:00`;
+        fullStart = new Date(startDateTime).toISOString();
       }
 
+      // Handle end date/time
       if (end.includes("T")) {
-        fullEnd = end;
+        // Already has time, ensure it's valid ISO
+        fullEnd = new Date(end).toISOString();
       } else {
-        fullEnd = endTime ? `${end}${endTime}` : `${end}T23:59:59`;
+        // Date only, add time
+        const endDateTime = endTime
+          ? `${end}T${endTime.replace(/^T/, "")}`
+          : `${end}T23:59:59`;
+        fullEnd = new Date(endDateTime).toISOString();
+      }
+
+      // Validate the dates
+      if (isNaN(Date.parse(fullStart)) || isNaN(Date.parse(fullEnd))) {
+        return {
+          error: "Invalid date format provided",
+          events: [],
+        };
       }
 
       const events = await api.calendar.getEvents({
@@ -107,7 +129,7 @@ export const getEvents = tool({
 export const getEvent = tool({
   description:
     "Retrieves a specific calendar event by its ID from the user's Google Calendar.",
-  parameters: z.object({
+  inputSchema: z.object({
     calendarId: z
       .string()
       .default("primary")
@@ -151,7 +173,7 @@ export const getEvent = tool({
 export const getNextUpcomingEvent = tool({
   description:
     "Retrieves the very next upcoming event from all calendars from the current time. Tells you if the event is ongoing, starting soon, or upcoming.",
-  parameters: z.object({}),
+  inputSchema: z.object({}),
   execute: async () => {
     try {
       const activeAccountId = await getActiveAccountId();
@@ -411,8 +433,8 @@ const updateEventSchema = z.object({
 
 export const updateEvent = tool({
   description:
-    "Updates an existing event in the user's Google Calendar. Use this to change event details like title, time, location, attendees, or description. This tool requires an event identifier (eventId). If the user refers to an event ambiguously (e.g., 'my meeting tomorrow at 10'), the eventId might need to be found using the 'Find Events' tool first before this update tool can be used.",
-  parameters: updateEventSchema,
+    "Updates an existing event in the user's Google Calendar. Use this to change event details like title, time, location, attendees, or description. This tool requires an event identifier (eventId). If the user refers to an event ambiguously (e.g., 'my meeting tomorrow at 10'), the eventId might need to be found using the 'getEvents' tool first before this update tool can be used.",
+  inputSchema: updateEventSchema,
   execute: async ({
     attendeesToAdd,
     attendeesToRemove,
@@ -512,8 +534,8 @@ export const updateEvent = tool({
 
 export const deleteEvent = tool({
   description:
-    "Deletes an existing event from the user's Google Calendar. Use this when a user wants to remove or cancel a meeting, appointment, or other calendar entry. This tool requires an event identifier (eventId). If the user refers to an event ambiguously (e.g., 'delete my meeting tomorrow at 10'), the eventId might need to be found using the 'Find Events' tool first.",
-  parameters: z.object({
+    "Deletes an existing event from the user's Google Calendar. Use this when a user wants to remove or cancel a meeting, appointment, or other calendar entry. This tool requires an event identifier (eventId). If the user refers to an event ambiguously (e.g., 'delete my meeting tomorrow at 10'), the eventId might need to be found using the 'getEvents' tool first.",
+  inputSchema: z.object({
     calendarId: z
       .string()
       .default("primary")
@@ -563,7 +585,7 @@ export const deleteEvent = tool({
 export const createEvent = tool({
   description:
     "Creates a new event in the user's Google Calendar. Use this to schedule meetings, appointments, or other calendar entries based on user-provided details like title, date, time, attendees, and location.",
-  parameters: createEventSchema,
+  inputSchema: createEventSchema,
   execute: async ({
     attendees,
     createMeetLink,
@@ -637,7 +659,7 @@ export const createEvent = tool({
 export const createRecurringEvent = tool({
   description:
     "Creates a new recurring event in the user's Google Calendar. Use this specifically when a user wants to create repeating events like daily meetings, weekly standup, monthly reviews, etc. This tool handles recurring patterns including daily, weekly, monthly, or yearly recurrence.",
-  parameters: createEventSchema.omit({ recurrence: true }).extend({
+  inputSchema: createEventSchema.omit({ recurrence: true }).extend({
     recurrence: z
       .enum(["daily", "weekly", "monthly", "yearly"])
       .describe(
@@ -752,7 +774,7 @@ export const getFreeSlotsSchema = z.object({
 export const getFreeSlots = tool({
   description:
     "Queries the free/busy status for a list of specified calendars within a given time range. Use this to determine when users are available or busy, which is essential for finding suitable meeting times or answering questions about availability.",
-  parameters: getFreeSlotsSchema,
+  inputSchema: getFreeSlotsSchema,
   execute: async ({
     calendarIds,
     timeMax,

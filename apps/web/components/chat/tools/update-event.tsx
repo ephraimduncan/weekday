@@ -1,4 +1,4 @@
-import type { Message, ToolInvocation } from "ai";
+import type { ToolUIPart, UIMessage } from "ai";
 
 import { format } from "date-fns";
 import { CalendarDays } from "lucide-react";
@@ -14,18 +14,18 @@ export function UpdateEventResult({
   message,
   toolInvocation,
 }: {
-  message: Message;
-  toolInvocation: ToolInvocation;
+  message: UIMessage;
+  toolInvocation: ToolUIPart;
 }) {
-  if (toolInvocation.state !== "result" || !toolInvocation.result) {
+  if (toolInvocation.state !== "output-available" || !toolInvocation.output) {
     return null;
   }
 
-  const result = toolInvocation.result;
+  const result = toolInvocation.output as { error?: string; event?: any };
 
   if (result.error) {
     return (
-      <div className="flex flex-col gap-2 px-2 py-3">
+      <div className="flex flex-col gap-2 py-3">
         <div className="flex items-center gap-2">
           <CalendarDays className="h-4 w-4 text-gray-500" />
           <p className="font-medium text-gray-700 dark:text-gray-300">
@@ -60,7 +60,7 @@ export function UpdateEventResult({
   const endDate = new Date(event.end);
 
   return (
-    <div className="flex flex-col gap-2 px-2 py-3">
+    <div className="flex flex-col gap-2 py-2">
       <div className="flex items-center gap-2">
         <CalendarDays className="h-4 w-4 text-gray-500" />
         <p className="font-medium text-gray-700 dark:text-gray-300">
@@ -109,16 +109,22 @@ export function UpdateEventResult({
 export function UpdateEventCall({
   toolInvocation,
 }: {
-  toolInvocation: ToolInvocation;
+  toolInvocation: ToolUIPart;
 }) {
-  const updateDetails = toolInvocation.args;
+  const updateDetails = toolInvocation.input as {
+    newEndTime?: string;
+    newStartTime?: string;
+    originalEndTime?: string;
+    originalStartTime?: string;
+    summary?: string;
+  };
   const originalStartTime = updateDetails.originalStartTime;
   const originalEndTime = updateDetails.originalEndTime;
   const newStartTime = updateDetails.newStartTime;
   const newEndTime = updateDetails.newEndTime;
 
   return (
-    <div className="flex flex-col gap-2 px-2 py-3">
+    <div className="flex flex-col gap-2 py-2">
       <div className="flex items-center gap-2">
         <CalendarDays className="h-4 w-4 text-gray-500" />
         <p className="font-medium text-gray-700 dark:text-gray-300">

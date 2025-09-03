@@ -1,8 +1,8 @@
-import type { ToolInvocation } from "ai";
+import type { ToolUIPart } from "ai";
 
 import { CalendarDays } from "lucide-react";
 
-import { type CalendarEvent, EventItem } from "@/components/event-calendar";
+import { EventItem } from "@/components/event-calendar";
 import {
   formatEventTimeDisplay,
   formatPreciseUpcomingStatusText,
@@ -11,26 +11,28 @@ import {
 export function GetUpcomingEventResult({
   toolInvocation,
 }: {
-  toolInvocation: ToolInvocation;
+  toolInvocation: ToolUIPart;
 }) {
-  if (toolInvocation.state !== "result" || !toolInvocation.result) {
+  if (toolInvocation.state !== "output-available" || !toolInvocation.output) {
     return null;
   }
 
-  const result = toolInvocation.result;
-  const {
-    event,
-    minutesToStart,
-    status: eventStatus,
-  } = toolInvocation.result as {
-    event: CalendarEvent;
-    minutesToStart: number;
-    status: string;
+  const result = toolInvocation.output as {
+    event?: {
+      id: string;
+      end: string;
+      start: string;
+      title: string;
+      allDay?: boolean;
+    };
+    minutesToStart?: number;
+    status?: string;
   };
+  const { event, minutesToStart, status: eventStatus } = result;
 
   if (!event) {
     return (
-      <div className="flex flex-col gap-2 px-2 py-3">
+      <div className="flex flex-col gap-2 py-3">
         <div className="flex items-center gap-2">
           <CalendarDays className="h-4 w-4 text-gray-500" />
           <p className="font-medium text-gray-700 dark:text-gray-300">
@@ -45,14 +47,14 @@ export function GetUpcomingEventResult({
   }
 
   let statusText = "";
-  if (eventStatus === "upcoming") {
+  if (eventStatus === "upcoming" && minutesToStart !== undefined) {
     statusText = formatPreciseUpcomingStatusText(minutesToStart);
   } else if (eventStatus === "ongoing") {
     statusText = "Ongoing";
   }
 
   return (
-    <div className="flex flex-col gap-3 px-2 py-3">
+    <div className="flex flex-col gap-3 py-2">
       <div className="flex items-center gap-2">
         <CalendarDays className="h-4 w-4 text-gray-500" />
         <p className="font-medium text-gray-700 dark:text-gray-300">
@@ -76,7 +78,11 @@ export function GetUpcomingEventResult({
         )}
         <EventItem
           onClick={() => console.log("Event clicked in chat:", event)}
-          event={event}
+          event={{
+            ...event,
+            end: new Date(event.end),
+            start: new Date(event.start),
+          }}
           view="agenda"
         />
       </div>

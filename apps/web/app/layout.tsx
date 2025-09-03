@@ -36,12 +36,8 @@ export default async function RootLayout({
       </head>
       <body
         className={`${fontSans.variable} ${fontMono.variable} flex h-full flex-col font-sans antialiased`}
+        suppressHydrationWarning
       >
-        <Script
-          data-website-id="e38b6ee0-5973-4bc6-8de4-78ab3e09d532"
-          src="https://analytics.duncan.land/script.js"
-          defer
-        />
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
@@ -59,6 +55,14 @@ export default async function RootLayout({
           </ChatProvider>
         </ThemeProvider>
       </body>
+
+      {process.env.NODE_ENV === "production" && (
+        <Script
+          data-website-id="e38b6ee0-5973-4bc6-8de4-78ab3e09d532"
+          src="https://analytics.duncan.land/script.js"
+          defer
+        />
+      )}
     </html>
   );
 }

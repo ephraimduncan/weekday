@@ -1,21 +1,32 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useState } from "react";
 
-import type { ToolInvocation, Message as UIMessage } from "ai";
+import type { ToolUIPart, UIMessage } from "ai";
 
 import { type UseChatOptions, useChat } from "@ai-sdk/react";
+import { DefaultChatTransport } from "ai";
 import { nanoid } from "nanoid";
 import { match } from "ts-pattern";
 
-import { ChatContainer } from "@/components/prompt-kit/chat-container";
-import { Markdown } from "@/components/prompt-kit/markdown";
-import { Message, MessageContent } from "@/components/prompt-kit/message";
-import { ScrollButton } from "@/components/prompt-kit/scroll-button";
+import {
+  Conversation,
+  ConversationContent,
+  ConversationScrollButton,
+} from "@/components/ai/conversation";
+import { Message, MessageContent } from "@/components/ai/message";
+import {
+  Reasoning,
+  ReasoningContent,
+  ReasoningTrigger,
+} from "@/components/ai/reasoning";
+import { Response } from "@/components/ai/response";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { useChat as useChatProvider } from "@/providers/chat-provider";
 import { api } from "@/trpc/react";
 
+import { Suggestion, Suggestions } from "../ai/suggestion";
 import { ChatPromptInput } from "./chat-prompt-input";
 import {
   CreateEventCall,
@@ -33,46 +44,42 @@ import {
 import { UpdateEventCall, UpdateEventResult } from "./tools/update-event";
 
 export function ChatSidebar() {
-  const { isChatOpen } = useChatProvider();
   const utils = api.useUtils();
-
-  const containerRef = useRef<HTMLDivElement>(null);
-  const bottomRef = useRef<HTMLDivElement>(null);
   const [chatId, setChatId] = useState(nanoid());
+  const [input, setInput] = useState("");
 
-  const { input, messages, setInput, setMessages, status, stop, handleSubmit } =
-    useChat({
-      id: chatId,
+  const { isChatOpen } = useChatProvider();
+  const { messages, sendMessage, setMessages, status, stop } = useChat({
+    id: chatId,
+    transport: new DefaultChatTransport({
       api: "/api/ai/chat",
+    }),
 
-      onFinish: (message) => {
-        if (message.parts) {
-          for (const part of message.parts) {
-            if (part.type === "tool-invocation") {
-              const toolInvocation = part.toolInvocation as ToolInvocation;
-              if (
-                toolInvocation.toolName === "createEvent" ||
-                toolInvocation.toolName === "createRecurringEvent" ||
-                toolInvocation.toolName === "updateEvent" ||
-                toolInvocation.toolName === "deleteEvent"
-              ) {
-                utils.calendar.getEvents.invalidate();
-              }
-            }
+    onFinish: ({ message }: { message: UIMessage }) => {
+      if (message.parts) {
+        for (const part of message.parts) {
+          if (
+            part.type === "tool-createEvent" ||
+            part.type === "tool-createRecurringEvent" ||
+            part.type === "tool-updateEvent" ||
+            part.type === "tool-deleteEvent"
+          ) {
+            utils.calendar.getEvents.invalidate();
           }
         }
-      },
-      onToolCall: ({ toolCall }) => {
-        if (
-          toolCall.toolName === "createEvent" ||
-          toolCall.toolName === "createRecurringEvent" ||
-          toolCall.toolName === "updateEvent" ||
-          toolCall.toolName === "deleteEvent"
-        ) {
-          utils.calendar.getEvents.invalidate();
-        }
-      },
-    } satisfies UseChatOptions);
+      }
+    },
+    onToolCall: ({ toolCall }) => {
+      if (
+        toolCall.toolName === "createEvent" ||
+        toolCall.toolName === "createRecurringEvent" ||
+        toolCall.toolName === "updateEvent" ||
+        toolCall.toolName === "deleteEvent"
+      ) {
+        utils.calendar.getEvents.invalidate();
+      }
+    },
+  } satisfies UseChatOptions<UIMessage>);
 
   const handleFormSubmit = (e?: React.FormEvent<HTMLFormElement>) => {
     e?.preventDefault();
@@ -80,7 +87,8 @@ export function ChatSidebar() {
       return;
     }
 
-    handleSubmit(e);
+    sendMessage({ text: input });
+    setInput("");
   };
 
   const handleNewChat = () => {
@@ -90,13 +98,22 @@ export function ChatSidebar() {
 
   const isLoading = status === "submitted" || status === "streaming";
 
+  const suggestions = [
+    "Find free time next week",
+    "What events do I have today?",
+  ];
+
+  const handleSuggestionClick = (suggestion: string) => {
+    sendMessage({ text: suggestion });
+  };
+
   if (!isChatOpen) {
     return null;
   }
 
   return (
-    <div className="bg-background flex h-full flex-1 flex-col gap-4 rounded-lg pt-0">
-      <div className="relative flex h-[calc(100vh-1rem)] w-full flex-col overflow-hidden">
+    <div className="bg-background flex h-full w-full flex-1 flex-col gap-4 rounded-lg pt-0">
+      <div className="relative flex h-full w-full flex-col overflow-hidden">
         <div className="flex w-full items-center justify-between border-b p-3">
           <div />
           <Button size="sm" onClick={handleNewChat}>
@@ -104,274 +121,208 @@ export function ChatSidebar() {
           </Button>
         </div>
 
-        <ChatContainer
-          ref={containerRef}
-          className="flex-1 space-y-4 border-t p-4"
-          scrollToRef={bottomRef}
-        >
-          {messages.map((message: UIMessage) => {
-            const isAssistant = message.role === "assistant";
-
-            return (
-              <Message key={message.id}>
-                <div className="flex-1 space-y-2">
-                  {message.parts?.map((part, index) => {
-                    const toolInvocation =
-                      part.type === "tool-invocation"
-                        ? (part.toolInvocation as ToolInvocation)
-                        : undefined;
-                    const toolCallId = toolInvocation?.toolCallId;
-
-                    return match(part)
-                      .with({ type: "text" }, ({ text }) =>
-                        match(isAssistant)
-                          .with(true, () => (
-                            <div
-                              key={`${message.id}-text-${index}`}
-                              className="text-foreground prose rounded-lg p-2"
-                            >
-                              <Markdown className="prose dark:prose-invert">
-                                {String(text)}
-                              </Markdown>
-                            </div>
-                          ))
-                          .with(false, () => (
-                            <MessageContent
-                              key={`${message.id}-text-${index}`}
-                              className="bg-sidebar text-primary-foreground dark:text-foreground prose-invert"
-                              markdown
-                            >
-                              {String(text)}
-                            </MessageContent>
-                          ))
-                          .exhaustive(),
-                      )
-                      .with(
-                        {
-                          toolInvocation: {
-                            state: "call",
-                            toolName: "getEvents",
-                          },
-                          type: "tool-invocation",
-                        },
-                        () => <GetEventCall key={toolCallId} />,
-                      )
-                      .with(
-                        {
-                          toolInvocation: {
-                            state: "result",
-                            toolName: "getEvents",
-                          },
-                          type: "tool-invocation",
-                        },
-                        ({ toolInvocation }) => (
-                          <GetEventResult
-                            key={toolCallId}
-                            toolInvocation={toolInvocation as ToolInvocation}
-                          />
-                        ),
-                      )
-                      .with(
-                        {
-                          toolInvocation: {
-                            state: "call",
-                            toolName: "createEvent",
-                          },
-                          type: "tool-invocation",
-                        },
-                        () => <CreateEventCall key={toolCallId} />,
-                      )
-                      .with(
-                        {
-                          toolInvocation: {
-                            state: "result",
-                            toolName: "createEvent",
-                          },
-                          type: "tool-invocation",
-                        },
-                        ({ toolInvocation }) => (
-                          <CreateEventResult
-                            key={toolCallId}
-                            toolInvocation={toolInvocation as ToolInvocation}
-                          />
-                        ),
-                      )
-                      .with(
-                        {
-                          toolInvocation: {
-                            state: "call",
-                            toolName: "createRecurringEvent",
-                          },
-                          type: "tool-invocation",
-                        },
-                        () => <CreateRecurringEventCall key={toolCallId} />,
-                      )
-                      .with(
-                        {
-                          toolInvocation: {
-                            state: "result",
-                            toolName: "createRecurringEvent",
-                          },
-                          type: "tool-invocation",
-                        },
-                        ({ toolInvocation }) => (
-                          <CreateRecurringEventResult
-                            key={toolCallId}
-                            toolInvocation={toolInvocation as ToolInvocation}
-                          />
-                        ),
-                      )
-                      .with(
-                        {
-                          toolInvocation: {
-                            state: "call",
-                            toolName: "updateEvent",
-                          },
-                          type: "tool-invocation",
-                        },
-                        ({ toolInvocation }) => (
-                          <UpdateEventCall
-                            key={toolCallId}
-                            toolInvocation={toolInvocation as ToolInvocation}
-                          />
-                        ),
-                      )
-                      .with(
-                        {
-                          toolInvocation: {
-                            state: "result",
-                            toolName: "updateEvent",
-                          },
-                          type: "tool-invocation",
-                        },
-                        ({ toolInvocation }) => (
-                          <UpdateEventResult
-                            key={toolCallId}
-                            message={message}
-                            toolInvocation={toolInvocation as ToolInvocation}
-                          />
-                        ),
-                      )
-                      .with(
-                        {
-                          toolInvocation: {
-                            state: "call",
-                            toolName: "getNextUpcomingEvent",
-                          },
-                          type: "tool-invocation",
-                        },
-                        () => <GetUpcomingEventCall key={toolCallId} />,
-                      )
-                      .with(
-                        {
-                          toolInvocation: {
-                            state: "result",
-                            toolName: "getNextUpcomingEvent",
-                          },
-                          type: "tool-invocation",
-                        },
-                        ({ toolInvocation }) => (
-                          <GetUpcomingEventResult
-                            key={toolCallId}
-                            toolInvocation={toolInvocation as ToolInvocation}
-                          />
-                        ),
-                      )
-                      .with(
-                        {
-                          toolInvocation: {
-                            state: "call",
-                            toolName: "getFreeSlots",
-                          },
-                          type: "tool-invocation",
-                        },
-                        () => <GetFreeSlotsCall key={toolCallId} />,
-                      )
-                      .with(
-                        {
-                          toolInvocation: {
-                            state: "result",
-                            toolName: "getFreeSlots",
-                          },
-                          type: "tool-invocation",
-                        },
-                        ({ toolInvocation }) => (
-                          <GetFreeSlotsResult
-                            key={toolCallId}
-                            toolInvocation={toolInvocation as ToolInvocation}
-                          />
-                        ),
-                      )
-                      .with(
-                        {
-                          toolInvocation: {
-                            state: "call",
-                            toolName: "deleteEvent",
-                          },
-                          type: "tool-invocation",
-                        },
-                        () => <DeleteEventCall key={toolCallId} />,
-                      )
-                      .with(
-                        {
-                          toolInvocation: {
-                            state: "result",
-                            toolName: "deleteEvent",
-                          },
-                          type: "tool-invocation",
-                        },
-                        ({ toolInvocation }) => (
-                          <DeleteEventResult
-                            key={toolCallId}
-                            toolInvocation={toolInvocation as ToolInvocation}
-                          />
-                        ),
-                      )
-                      .otherwise(() => null);
+        <Conversation className="flex-1 border-t">
+          <ConversationContent>
+            {messages.map((message: UIMessage, index: number) => {
+              return (
+                <Message
+                  key={`${message.id}-${index}`}
+                  className={cn("py-2", {
+                    "gap-1 text-justify [&>div]:max-w-[100%]":
+                      message.role === "assistant",
                   })}
-
-                  {message.parts?.length === 0 && (
-                    <>
-                      {match(isAssistant)
-                        .with(true, () => (
-                          <div className="bg-secondary text-foreground prose rounded-lg p-2">
-                            <Markdown className="prose dark:prose-invert">
-                              {String(message.content || "")}
-                            </Markdown>
-                          </div>
-                        ))
-                        .with(false, () => (
+                  from={message.role}
+                >
+                  <div className="flex-1 space-y-2">
+                    {message.parts?.map((part, index) => {
+                      if (part.type === "text") {
+                        return (
                           <MessageContent
-                            className="bg-primary text-primary-foreground prose-invert"
-                            markdown
+                            key={`${message.id}-text-${index}`}
+                            className={cn({
+                              "mb-4 bg-transparent! p-0 text-base":
+                                message.role === "assistant",
+                              "rounded-xl p-2! pl-2.5!":
+                                message.role === "user",
+                            })}
                           >
-                            {String(message.content || "")}
+                            <Response>{String(part.text)}</Response>
                           </MessageContent>
-                        ))
-                        .exhaustive()}
-                    </>
-                  )}
-                </div>
-              </Message>
-            );
-          })}
-          <div ref={bottomRef} />
-        </ChatContainer>
+                        );
+                      }
 
-        <div className="border-border relative border-t p-2">
-          <ChatPromptInput
-            value={input}
-            onSubmit={handleFormSubmit}
-            onValueChange={setInput}
-            isLoading={isLoading}
-          />
+                      if (part.type === "reasoning") {
+                        return (
+                          <Reasoning
+                            key={`${message.id}-reasoning-${index}`}
+                            isStreaming={part.state === "streaming"}
+                          >
+                            <ReasoningTrigger />
+                            <ReasoningContent className="mt-2 pl-5 [&>div]:space-y-[0]">
+                              {String(part.text)}
+                            </ReasoningContent>
+                          </Reasoning>
+                        );
+                      }
+
+                      return match(part.type)
+                        .with("tool-getEvents", () => {
+                          const toolPart = part as ToolUIPart;
+                          if (toolPart.state === "input-available") {
+                            return (
+                              <GetEventCall
+                                key={`${message.id}-getEvents-${index}`}
+                              />
+                            );
+                          } else if (toolPart.state === "output-available") {
+                            return (
+                              <GetEventResult
+                                key={`${message.id}-getEventsResult-${index}`}
+                                toolInvocation={toolPart}
+                              />
+                            );
+                          }
+                          return null;
+                        })
+                        .with("tool-createEvent", () => {
+                          const toolPart = part as ToolUIPart;
+                          if (toolPart.state === "input-available") {
+                            return (
+                              <CreateEventCall
+                                key={`${message.id}-createEvent-${index}`}
+                              />
+                            );
+                          } else if (toolPart.state === "output-available") {
+                            return (
+                              <CreateEventResult
+                                key={`${message.id}-createEventResult-${index}`}
+                                toolInvocation={toolPart}
+                              />
+                            );
+                          }
+                          return null;
+                        })
+                        .with("tool-createRecurringEvent", () => {
+                          const toolPart = part as ToolUIPart;
+                          if (toolPart.state === "input-available") {
+                            return (
+                              <CreateRecurringEventCall
+                                key={`${message.id}-createRecurringEvent-${index}`}
+                              />
+                            );
+                          } else if (toolPart.state === "output-available") {
+                            return (
+                              <CreateRecurringEventResult
+                                key={`${message.id}-createRecurringEventResult-${index}`}
+                                toolInvocation={toolPart}
+                              />
+                            );
+                          }
+                          return null;
+                        })
+                        .with("tool-updateEvent", () => {
+                          const toolPart = part as ToolUIPart;
+                          if (toolPart.state === "input-available") {
+                            return (
+                              <UpdateEventCall
+                                key={`${message.id}-updateEvent-${index}`}
+                                toolInvocation={toolPart}
+                              />
+                            );
+                          } else if (toolPart.state === "output-available") {
+                            return (
+                              <UpdateEventResult
+                                key={`${message.id}-updateEventResult-${index}`}
+                                message={message}
+                                toolInvocation={toolPart}
+                              />
+                            );
+                          }
+                          return null;
+                        })
+                        .with("tool-getNextUpcomingEvent", () => {
+                          const toolPart = part as ToolUIPart;
+                          if (toolPart.state === "input-available") {
+                            return (
+                              <GetUpcomingEventCall
+                                key={`${message.id}-getNextUpcomingEvent-${index}`}
+                              />
+                            );
+                          } else if (toolPart.state === "output-available") {
+                            return (
+                              <GetUpcomingEventResult
+                                key={`${message.id}-getNextUpcomingEventResult-${index}`}
+                                toolInvocation={toolPart}
+                              />
+                            );
+                          }
+                          return null;
+                        })
+                        .with("tool-getFreeSlots", () => {
+                          const toolPart = part as ToolUIPart;
+                          if (toolPart.state === "input-available") {
+                            return (
+                              <GetFreeSlotsCall
+                                key={`${message.id}-getFreeSlots-${index}`}
+                              />
+                            );
+                          } else if (toolPart.state === "output-available") {
+                            return (
+                              <GetFreeSlotsResult
+                                key={`${message.id}-getFreeSlotsResult-${index}`}
+                                toolInvocation={toolPart}
+                              />
+                            );
+                          }
+                          return null;
+                        })
+                        .with("tool-deleteEvent", () => {
+                          const toolPart = part as ToolUIPart;
+                          if (toolPart.state === "input-available") {
+                            return (
+                              <DeleteEventCall
+                                key={`${message.id}-deleteEvent-${index}`}
+                              />
+                            );
+                          } else if (toolPart.state === "output-available") {
+                            return (
+                              <DeleteEventResult
+                                key={`${message.id}-deleteEventResult-${index}`}
+                                toolInvocation={toolPart}
+                              />
+                            );
+                          }
+                          return null;
+                        })
+                        .otherwise(() => null);
+                    })}
+                  </div>
+                </Message>
+              );
+            })}
+          </ConversationContent>
+          <ConversationScrollButton className="shadow-sm" />
+        </Conversation>
+
+        <div className="px-4 pt-4">
+          <Suggestions className="flex flex-wrap gap-2">
+            {suggestions.map((s) => (
+              <Suggestion
+                key={s}
+                onClick={handleSuggestionClick}
+                suggestion={s}
+              />
+            ))}
+          </Suggestions>
         </div>
 
-        <div className="absolute right-7 bottom-20">
-          <ScrollButton
-            className="shadow-sm"
-            containerRef={containerRef}
-            scrollRef={bottomRef}
+        <div className="relative p-2">
+          <ChatPromptInput
+            value={input}
+            onStop={stop}
+            onSubmit={handleFormSubmit}
+            onValueChange={setInput}
+            status={status}
           />
         </div>
       </div>

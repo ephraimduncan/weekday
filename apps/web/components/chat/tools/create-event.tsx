@@ -1,4 +1,4 @@
-import type { ToolInvocation } from "ai";
+import type { ToolUIPart } from "ai";
 
 import { CalendarDays } from "lucide-react";
 
@@ -7,7 +7,7 @@ import { formatEventTimeDisplay } from "@/lib/utils";
 
 export function CreateEventCall() {
   return (
-    <div className="flex flex-col gap-2 px-2 py-3">
+    <div className="flex flex-col gap-2 py-3">
       <div className="flex items-center gap-2">
         <CalendarDays className="h-4 w-4 text-gray-500" />
         <p className="font-medium text-gray-700 dark:text-gray-300">
@@ -23,7 +23,7 @@ export function CreateEventCall() {
 
 export function CreateRecurringEventCall() {
   return (
-    <div className="flex flex-col gap-2 px-2 py-3">
+    <div className="flex flex-col gap-2 py-2">
       <div className="flex items-center gap-2">
         <CalendarDays className="h-4 w-4 text-gray-500" />
         <p className="font-medium text-gray-700 dark:text-gray-300">
@@ -40,17 +40,17 @@ export function CreateRecurringEventCall() {
 export function CreateEventResult({
   toolInvocation,
 }: {
-  toolInvocation: ToolInvocation;
+  toolInvocation: ToolUIPart;
 }) {
-  if (toolInvocation.state !== "result" || !toolInvocation.result) {
+  if (toolInvocation.state !== "output-available" || !toolInvocation.output) {
     return null;
   }
 
-  const result = toolInvocation.result;
+  const result = toolInvocation.output as { error?: string; event?: any };
 
   if (result.error) {
     return (
-      <div className="flex flex-col gap-2 px-2 py-3">
+      <div className="flex flex-col gap-2 py-2">
         <div className="flex items-center gap-2">
           <CalendarDays className="h-4 w-4 text-gray-500" />
           <p className="font-medium text-gray-700 dark:text-gray-300">
@@ -71,7 +71,7 @@ export function CreateEventResult({
   const endDate = new Date(event.end);
 
   return (
-    <div className="flex flex-col gap-3 px-2 py-3">
+    <div className="flex flex-col gap-3 py-2">
       <div className="flex items-center gap-2">
         <CalendarDays className="h-4 w-4 text-gray-500" />
         <p className="font-medium text-gray-700 dark:text-gray-300">
@@ -115,17 +115,17 @@ export function CreateEventResult({
 export function CreateRecurringEventResult({
   toolInvocation,
 }: {
-  toolInvocation: ToolInvocation;
+  toolInvocation: ToolUIPart;
 }) {
-  if (toolInvocation.state !== "result" || !toolInvocation.result) {
+  if (toolInvocation.state !== "output-available" || !toolInvocation.output) {
     return null;
   }
 
-  const result = toolInvocation.result;
+  const result = toolInvocation.output as { error?: string; event?: any };
 
   if (result.error) {
     return (
-      <div className="flex flex-col gap-2 px-2 py-3">
+      <div className="flex flex-col gap-2 py-2">
         <div className="flex items-center gap-2">
           <CalendarDays className="h-4 w-4 text-gray-500" />
           <p className="font-medium text-gray-700 dark:text-gray-300">
@@ -146,7 +146,7 @@ export function CreateRecurringEventResult({
   const endDate = new Date(event.end);
 
   return (
-    <div className="flex flex-col gap-3 px-2 py-3">
+    <div className="flex flex-col gap-3 py-2">
       <div className="flex items-center gap-2">
         <CalendarDays className="h-4 w-4 text-gray-500" />
         <p className="font-medium text-gray-700 dark:text-gray-300">
