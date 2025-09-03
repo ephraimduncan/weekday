@@ -10,7 +10,8 @@
         "BETTER_AUTH_GOOGLE_SECRET",
         "BETTER_AUTH_SECRET",
         "BETTER_AUTH_URL",
-        "DATABASE_URL"
+        "DATABASE_URL",
+        "AI_GATEWAY_API_KEY"
       ]
     },
     "dev": {
