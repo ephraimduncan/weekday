@@ -1,5 +1,4 @@
 "use client";
-
 import { useRef, useState } from "react";
 
 import { type UseChatOptions, useChat } from "@ai-sdk/react";
@@ -51,10 +50,12 @@ export function ChatSidebar() {
     onFinish: (message) => {
       if (message.parts) {
         for (const part of message.parts) {
-          if (part.type === "tool-createEvent" ||
-              part.type === "tool-createRecurringEvent" ||
-              part.type === "tool-updateEvent" ||
-              part.type === "tool-deleteEvent") {
+          if (
+            part.type === "tool-createEvent" ||
+            part.type === "tool-createRecurringEvent" ||
+            part.type === "tool-updateEvent" ||
+            part.type === "tool-deleteEvent"
+          ) {
             utils.calendar.getEvents.invalidate();
           }
         }
@@ -111,6 +112,8 @@ export function ChatSidebar() {
           {messages.map((message: UIMessage) => {
             const isAssistant = message.role === "assistant";
 
+            console.log(message);
+
             return (
               <Message key={message.id}>
                 <div className="flex-1 space-y-2">
@@ -142,164 +145,184 @@ export function ChatSidebar() {
                     }
 
                     // Handle tool parts - these now use specific tool names in the type
-                    return match(part.type)
-                      // Handle getEvents tool
-                      .with("tool-getEvents", () => {
-                        if (part.state === "input-available") {
-                          return <GetEventCall key={`${message.id}-${index}`} />;
-                        } else if (part.state === "output-available") {
-                          return (
-                            <GetEventResult
-                              key={`${message.id}-${index}`}
-                              toolInvocation={{
-                                toolName: "getEvents",
-                                state: "result",
-                                result: part.output,
-                                toolCallId: part.toolCallId || "",
-                                args: part.input
-                              }}
-                            />
-                          );
-                        }
-                        return null;
-                      })
-                      // Handle createEvent tool
-                      .with("tool-createEvent", () => {
-                        if (part.state === "input-available") {
-                          return <CreateEventCall key={`${message.id}-${index}`} />;
-                        } else if (part.state === "output-available") {
-                          return (
-                            <CreateEventResult
-                              key={`${message.id}-${index}`}
-                              toolInvocation={{
-                                toolName: "createEvent",
-                                state: "result",
-                                result: part.output,
-                                toolCallId: part.toolCallId || "",
-                                args: part.input
-                              }}
-                            />
-                          );
-                        }
-                        return null;
-                      })
-                      // Handle createRecurringEvent tool
-                      .with("tool-createRecurringEvent", () => {
-                        if (part.state === "input-available") {
-                          return <CreateRecurringEventCall key={`${message.id}-${index}`} />;
-                        } else if (part.state === "output-available") {
-                          return (
-                            <CreateRecurringEventResult
-                              key={`${message.id}-${index}`}
-                              toolInvocation={{
-                                toolName: "createRecurringEvent",
-                                state: "result",
-                                result: part.output,
-                                toolCallId: part.toolCallId || "",
-                                args: part.input
-                              }}
-                            />
-                          );
-                        }
-                        return null;
-                      })
-                      // Handle updateEvent tool
-                      .with("tool-updateEvent", () => {
-                        if (part.state === "input-available") {
-                          return (
-                            <UpdateEventCall
-                              key={`${message.id}-${index}`}
-                              toolInvocation={{
-                                toolName: "updateEvent",
-                                state: "call",
-                                result: undefined,
-                                toolCallId: part.toolCallId || "",
-                                args: part.input
-                              }}
-                            />
-                          );
-                        } else if (part.state === "output-available") {
-                          return (
-                            <UpdateEventResult
-                              key={`${message.id}-${index}`}
-                              message={message}
-                              toolInvocation={{
-                                toolName: "updateEvent",
-                                state: "result",
-                                result: part.output,
-                                toolCallId: part.toolCallId || "",
-                                args: part.input
-                              }}
-                            />
-                          );
-                        }
-                        return null;
-                      })
-                      // Handle getNextUpcomingEvent tool
-                      .with("tool-getNextUpcomingEvent", () => {
-                        if (part.state === "input-available") {
-                          return <GetUpcomingEventCall key={`${message.id}-${index}`} />;
-                        } else if (part.state === "output-available") {
-                          return (
-                            <GetUpcomingEventResult
-                              key={`${message.id}-${index}`}
-                              toolInvocation={{
-                                toolName: "getNextUpcomingEvent",
-                                state: "result",
-                                result: part.output,
-                                toolCallId: part.toolCallId || "",
-                                args: part.input
-                              }}
-                            />
-                          );
-                        }
-                        return null;
-                      })
-                      // Handle getFreeSlots tool
-                      .with("tool-getFreeSlots", () => {
-                        if (part.state === "input-available") {
-                          return <GetFreeSlotsCall key={`${message.id}-${index}`} />;
-                        } else if (part.state === "output-available") {
-                          return (
-                            <GetFreeSlotsResult
-                              key={`${message.id}-${index}`}
-                              toolInvocation={{
-                                toolName: "getFreeSlots",
-                                state: "result",
-                                result: part.output,
-                                toolCallId: part.toolCallId || "",
-                                args: part.input
-                              }}
-                            />
-                          );
-                        }
-                        return null;
-                      })
-                      // Handle deleteEvent tool
-                      .with("tool-deleteEvent", () => {
-                        if (part.state === "input-available") {
-                          return <DeleteEventCall key={`${message.id}-${index}`} />;
-                        } else if (part.state === "output-available") {
-                          return (
-                            <DeleteEventResult
-                              key={`${message.id}-${index}`}
-                              toolInvocation={{
-                                toolName: "deleteEvent",
-                                state: "result",
-                                result: part.output,
-                                toolCallId: part.toolCallId || "",
-                                args: part.input
-                              }}
-                            />
-                          );
-                        }
-                        return null;
-                      })
-                      .otherwise(() => null);
+                    return (
+                      match(part.type)
+                        // Handle getEvents tool
+                        .with("tool-getEvents", () => {
+                          if (part.state === "input-available") {
+                            return (
+                              <GetEventCall key={`${message.id}-${index}`} />
+                            );
+                          } else if (part.state === "output-available") {
+                            return (
+                              <GetEventResult
+                                key={`${message.id}-${index}`}
+                                toolInvocation={{
+                                  toolName: "getEvents",
+                                  state: "result",
+                                  result: part.output,
+                                  toolCallId: part.toolCallId || "",
+                                  args: part.input,
+                                }}
+                              />
+                            );
+                          }
+                          return null;
+                        })
+                        // Handle createEvent tool
+                        .with("tool-createEvent", () => {
+                          if (part.state === "input-available") {
+                            return (
+                              <CreateEventCall key={`${message.id}-${index}`} />
+                            );
+                          } else if (part.state === "output-available") {
+                            return (
+                              <CreateEventResult
+                                key={`${message.id}-${index}`}
+                                toolInvocation={{
+                                  toolName: "createEvent",
+                                  state: "result",
+                                  result: part.output,
+                                  toolCallId: part.toolCallId || "",
+                                  args: part.input,
+                                }}
+                              />
+                            );
+                          }
+                          return null;
+                        })
+                        // Handle createRecurringEvent tool
+                        .with("tool-createRecurringEvent", () => {
+                          if (part.state === "input-available") {
+                            return (
+                              <CreateRecurringEventCall
+                                key={`${message.id}-${index}`}
+                              />
+                            );
+                          } else if (part.state === "output-available") {
+                            return (
+                              <CreateRecurringEventResult
+                                key={`${message.id}-${index}`}
+                                toolInvocation={{
+                                  toolName: "createRecurringEvent",
+                                  state: "result",
+                                  result: part.output,
+                                  toolCallId: part.toolCallId || "",
+                                  args: part.input,
+                                }}
+                              />
+                            );
+                          }
+                          return null;
+                        })
+                        // Handle updateEvent tool
+                        .with("tool-updateEvent", () => {
+                          if (part.state === "input-available") {
+                            return (
+                              <UpdateEventCall
+                                key={`${message.id}-${index}`}
+                                toolInvocation={{
+                                  toolName: "updateEvent",
+                                  state: "call",
+                                  result: undefined,
+                                  toolCallId: part.toolCallId || "",
+                                  args: part.input,
+                                }}
+                              />
+                            );
+                          } else if (part.state === "output-available") {
+                            return (
+                              <UpdateEventResult
+                                key={`${message.id}-${index}`}
+                                message={message}
+                                toolInvocation={{
+                                  toolName: "updateEvent",
+                                  state: "result",
+                                  result: part.output,
+                                  toolCallId: part.toolCallId || "",
+                                  args: part.input,
+                                }}
+                              />
+                            );
+                          }
+                          return null;
+                        })
+                        // Handle getNextUpcomingEvent tool
+                        .with("tool-getNextUpcomingEvent", () => {
+                          if (part.state === "input-available") {
+                            return (
+                              <GetUpcomingEventCall
+                                key={`${message.id}-${index}`}
+                              />
+                            );
+                          } else if (part.state === "output-available") {
+                            return (
+                              <GetUpcomingEventResult
+                                key={`${message.id}-${index}`}
+                                toolInvocation={{
+                                  toolName: "getNextUpcomingEvent",
+                                  state: "result",
+                                  result: part.output,
+                                  toolCallId: part.toolCallId || "",
+                                  args: part.input,
+                                }}
+                              />
+                            );
+                          }
+                          return null;
+                        })
+                        // Handle getFreeSlots tool
+                        .with("tool-getFreeSlots", () => {
+                          if (part.state === "input-available") {
+                            return (
+                              <GetFreeSlotsCall
+                                key={`${message.id}-${index}`}
+                              />
+                            );
+                          } else if (part.state === "output-available") {
+                            return (
+                              <GetFreeSlotsResult
+                                key={`${message.id}-${index}`}
+                                toolInvocation={{
+                                  toolName: "getFreeSlots",
+                                  state: "result",
+                                  result: part.output,
+                                  toolCallId: part.toolCallId || "",
+                                  args: part.input,
+                                }}
+                              />
+                            );
+                          }
+                          return null;
+                        })
+                        // Handle deleteEvent tool
+                        .with("tool-deleteEvent", () => {
+                          if (part.state === "input-available") {
+                            return (
+                              <DeleteEventCall key={`${message.id}-${index}`} />
+                            );
+                          } else if (part.state === "output-available") {
+                            return (
+                              <DeleteEventResult
+                                key={`${message.id}-${index}`}
+                                toolInvocation={{
+                                  toolName: "deleteEvent",
+                                  state: "result",
+                                  result: part.output,
+                                  toolCallId: part.toolCallId || "",
+                                  args: part.input,
+                                }}
+                              />
+                            );
+                          }
+                          return null;
+                        })
+                        .otherwise(() => null)
+                    );
                   })}
 
                   {message.parts?.length === 0 && (
-                    <div className="text-muted-foreground text-sm italic p-2">
+                    <div className="text-muted-foreground p-2 text-sm italic">
                       No content available
                     </div>
                   )}

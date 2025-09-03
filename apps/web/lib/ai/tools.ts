@@ -433,7 +433,7 @@ const updateEventSchema = z.object({
 
 export const updateEvent = tool({
   description:
-    "Updates an existing event in the user's Google Calendar. Use this to change event details like title, time, location, attendees, or description. This tool requires an event identifier (eventId). If the user refers to an event ambiguously (e.g., 'my meeting tomorrow at 10'), the eventId might need to be found using the 'Find Events' tool first before this update tool can be used.",
+    "Updates an existing event in the user's Google Calendar. Use this to change event details like title, time, location, attendees, or description. This tool requires an event identifier (eventId). If the user refers to an event ambiguously (e.g., 'my meeting tomorrow at 10'), the eventId might need to be found using the 'getEvents' tool first before this update tool can be used.",
   inputSchema: updateEventSchema,
   execute: async ({
     attendeesToAdd,
@@ -534,7 +534,7 @@ export const updateEvent = tool({
 
 export const deleteEvent = tool({
   description:
-    "Deletes an existing event from the user's Google Calendar. Use this when a user wants to remove or cancel a meeting, appointment, or other calendar entry. This tool requires an event identifier (eventId). If the user refers to an event ambiguously (e.g., 'delete my meeting tomorrow at 10'), the eventId might need to be found using the 'Find Events' tool first.",
+    "Deletes an existing event from the user's Google Calendar. Use this when a user wants to remove or cancel a meeting, appointment, or other calendar entry. This tool requires an event identifier (eventId). If the user refers to an event ambiguously (e.g., 'delete my meeting tomorrow at 10'), the eventId might need to be found using the 'getEvents' tool first.",
   inputSchema: z.object({
     calendarId: z
       .string()

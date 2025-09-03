@@ -36,7 +36,7 @@ export async function POST(req: Request) {
 
     const result = streamText({
       messages: convertToModelMessages(messages),
-      model: "openai/gpt-5",
+      model: "openai/gpt-5-mini",
       stopWhen: stepCountIs(25),
       system: systemPrompt({ currentDate, formattedDate, timezone }),
       tools: {
