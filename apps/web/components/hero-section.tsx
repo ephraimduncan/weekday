@@ -4,11 +4,14 @@ import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
 
+import weekdayLightImage from "../public/weekday-light.png";
 import { Header } from "./header";
 
 export const HeroSection = async () => {
   const session = await auth();
   const user = session?.user;
+
+  console.log(weekdayLightImage);
 
   return (
     <>
@@ -63,7 +66,7 @@ export const HeroSection = async () => {
                   className="relative z-2 rounded-2xl"
                   alt="Weekday Calendar Interface"
                   height="2240"
-                  src="/weekday-light.png"
+                  src={weekdayLightImage}
                   width="1376"
                 />
               </div>
