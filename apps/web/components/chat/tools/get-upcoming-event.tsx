@@ -1,8 +1,8 @@
-import type { ToolInvocation } from "ai";
+import type { ToolUIPart } from "ai";
 
 import { CalendarDays } from "lucide-react";
 
-import { type CalendarEvent, EventItem } from "@/components/event-calendar";
+import { EventItem } from "@/components/event-calendar";
 import {
   formatEventTimeDisplay,
   formatPreciseUpcomingStatusText,
@@ -11,22 +11,24 @@ import {
 export function GetUpcomingEventResult({
   toolInvocation,
 }: {
-  toolInvocation: ToolInvocation;
+  toolInvocation: ToolUIPart;
 }) {
-  if (toolInvocation.state !== "result" || !toolInvocation.result) {
+  if (toolInvocation.state !== "output-available" || !toolInvocation.output) {
     return null;
   }
 
-  const result = toolInvocation.result;
-  const {
-    event,
-    minutesToStart,
-    status: eventStatus,
-  } = toolInvocation.result as {
-    event: CalendarEvent;
-    minutesToStart: number;
-    status: string;
+  const result = toolInvocation.output as {
+    event?: {
+      id: string;
+      end: string;
+      start: string;
+      title: string;
+      allDay?: boolean;
+    };
+    minutesToStart?: number;
+    status?: string;
   };
+  const { event, minutesToStart, status: eventStatus } = result;
 
   if (!event) {
     return (
@@ -45,7 +47,7 @@ export function GetUpcomingEventResult({
   }
 
   let statusText = "";
-  if (eventStatus === "upcoming") {
+  if (eventStatus === "upcoming" && minutesToStart !== undefined) {
     statusText = formatPreciseUpcomingStatusText(minutesToStart);
   } else if (eventStatus === "ongoing") {
     statusText = "Ongoing";
@@ -76,7 +78,11 @@ export function GetUpcomingEventResult({
         )}
         <EventItem
           onClick={() => console.log("Event clicked in chat:", event)}
-          event={event}
+          event={{
+            ...event,
+            end: new Date(event.end),
+            start: new Date(event.start),
+          }}
           view="agenda"
         />
       </div>

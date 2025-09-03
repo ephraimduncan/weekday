@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "bun with:env next build",
+    "build": "bun with:env next build --turbopack",
     "dev": "bun with:env next dev --turbopack",
     "lint": "next lint",
     "lint:fix": "next lint --fix",

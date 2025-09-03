@@ -55,3 +55,5 @@ dist/
 .cursor
 .claude
 CLAUDE.md
+
+*.tsbuildinfo

@@ -1,4 +1,5 @@
-import { type ToolInvocation } from "ai";
+import type { ToolUIPart } from "ai";
+
 import { differenceInMinutes, format, parseISO } from "date-fns";
 import { Clock } from "lucide-react";
 
@@ -21,9 +22,19 @@ export function GetFreeSlotsCall() {
 export function GetFreeSlotsResult({
   toolInvocation,
 }: {
-  toolInvocation: ToolInvocation & { result?: any };
+  toolInvocation: ToolUIPart;
 }) {
-  const result = toolInvocation.result;
+  if (toolInvocation.state !== "output-available" || !toolInvocation.output) {
+    return null;
+  }
+
+  const result = toolInvocation.output as {
+    error?: string;
+    freeBusyData?: Array<{
+      end: string;
+      start: string;
+    }>;
+  };
 
   if (
     !result ||

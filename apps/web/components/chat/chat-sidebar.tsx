@@ -1,8 +1,10 @@
 "use client";
+
 import { useRef, useState } from "react";
 
+import type { ToolUIPart, UIMessage } from "ai";
+
 import { type UseChatOptions, useChat } from "@ai-sdk/react";
-import type { UIMessage } from "ai";
 import { DefaultChatTransport } from "ai";
 import { nanoid } from "nanoid";
 import { match } from "ts-pattern";
@@ -47,7 +49,7 @@ export function ChatSidebar() {
       api: "/api/ai/chat",
     }),
 
-    onFinish: (message) => {
+    onFinish: ({ message }: { message: UIMessage }) => {
       if (message.parts) {
         for (const part of message.parts) {
           if (
@@ -71,7 +73,7 @@ export function ChatSidebar() {
         utils.calendar.getEvents.invalidate();
       }
     },
-  } satisfies UseChatOptions);
+  } satisfies UseChatOptions<UIMessage>);
 
   const handleFormSubmit = (e?: React.FormEvent<HTMLFormElement>) => {
     e?.preventDefault();
@@ -118,7 +120,6 @@ export function ChatSidebar() {
               <Message key={message.id}>
                 <div className="flex-1 space-y-2">
                   {message.parts?.map((part, index) => {
-                    // Handle different part types
                     if (part.type === "text") {
                       const key = `${message.id}-text-${index}`;
                       return match(isAssistant)
@@ -144,26 +145,19 @@ export function ChatSidebar() {
                         .exhaustive();
                     }
 
-                    // Handle tool parts - these now use specific tool names in the type
                     return (
                       match(part.type)
-                        // Handle getEvents tool
                         .with("tool-getEvents", () => {
-                          if (part.state === "input-available") {
+                          const toolPart = part as ToolUIPart;
+                          if (toolPart.state === "input-available") {
                             return (
                               <GetEventCall key={`${message.id}-${index}`} />
                             );
-                          } else if (part.state === "output-available") {
+                          } else if (toolPart.state === "output-available") {
                             return (
                               <GetEventResult
                                 key={`${message.id}-${index}`}
-                                toolInvocation={{
-                                  toolName: "getEvents",
-                                  state: "result",
-                                  result: part.output,
-                                  toolCallId: part.toolCallId || "",
-                                  args: part.input,
-                                }}
+                                toolInvocation={toolPart}
                               />
                             );
                           }
@@ -171,21 +165,16 @@ export function ChatSidebar() {
                         })
                         // Handle createEvent tool
                         .with("tool-createEvent", () => {
-                          if (part.state === "input-available") {
+                          const toolPart = part as ToolUIPart;
+                          if (toolPart.state === "input-available") {
                             return (
                               <CreateEventCall key={`${message.id}-${index}`} />
                             );
-                          } else if (part.state === "output-available") {
+                          } else if (toolPart.state === "output-available") {
                             return (
                               <CreateEventResult
                                 key={`${message.id}-${index}`}
-                                toolInvocation={{
-                                  toolName: "createEvent",
-                                  state: "result",
-                                  result: part.output,
-                                  toolCallId: part.toolCallId || "",
-                                  args: part.input,
-                                }}
+                                toolInvocation={toolPart}
                               />
                             );
                           }
@@ -193,23 +182,18 @@ export function ChatSidebar() {
                         })
                         // Handle createRecurringEvent tool
                         .with("tool-createRecurringEvent", () => {
-                          if (part.state === "input-available") {
+                          const toolPart = part as ToolUIPart;
+                          if (toolPart.state === "input-available") {
                             return (
                               <CreateRecurringEventCall
                                 key={`${message.id}-${index}`}
                               />
                             );
-                          } else if (part.state === "output-available") {
+                          } else if (toolPart.state === "output-available") {
                             return (
                               <CreateRecurringEventResult
                                 key={`${message.id}-${index}`}
-                                toolInvocation={{
-                                  toolName: "createRecurringEvent",
-                                  state: "result",
-                                  result: part.output,
-                                  toolCallId: part.toolCallId || "",
-                                  args: part.input,
-                                }}
+                                toolInvocation={toolPart}
                               />
                             );
                           }
@@ -217,31 +201,20 @@ export function ChatSidebar() {
                         })
                         // Handle updateEvent tool
                         .with("tool-updateEvent", () => {
-                          if (part.state === "input-available") {
+                          const toolPart = part as ToolUIPart;
+                          if (toolPart.state === "input-available") {
                             return (
                               <UpdateEventCall
                                 key={`${message.id}-${index}`}
-                                toolInvocation={{
-                                  toolName: "updateEvent",
-                                  state: "call",
-                                  result: undefined,
-                                  toolCallId: part.toolCallId || "",
-                                  args: part.input,
-                                }}
+                                toolInvocation={toolPart}
                               />
                             );
-                          } else if (part.state === "output-available") {
+                          } else if (toolPart.state === "output-available") {
                             return (
                               <UpdateEventResult
                                 key={`${message.id}-${index}`}
                                 message={message}
-                                toolInvocation={{
-                                  toolName: "updateEvent",
-                                  state: "result",
-                                  result: part.output,
-                                  toolCallId: part.toolCallId || "",
-                                  args: part.input,
-                                }}
+                                toolInvocation={toolPart}
                               />
                             );
                           }
@@ -249,23 +222,18 @@ export function ChatSidebar() {
                         })
                         // Handle getNextUpcomingEvent tool
                         .with("tool-getNextUpcomingEvent", () => {
-                          if (part.state === "input-available") {
+                          const toolPart = part as ToolUIPart;
+                          if (toolPart.state === "input-available") {
                             return (
                               <GetUpcomingEventCall
                                 key={`${message.id}-${index}`}
                               />
                             );
-                          } else if (part.state === "output-available") {
+                          } else if (toolPart.state === "output-available") {
                             return (
                               <GetUpcomingEventResult
                                 key={`${message.id}-${index}`}
-                                toolInvocation={{
-                                  toolName: "getNextUpcomingEvent",
-                                  state: "result",
-                                  result: part.output,
-                                  toolCallId: part.toolCallId || "",
-                                  args: part.input,
-                                }}
+                                toolInvocation={toolPart}
                               />
                             );
                           }
@@ -273,23 +241,18 @@ export function ChatSidebar() {
                         })
                         // Handle getFreeSlots tool
                         .with("tool-getFreeSlots", () => {
-                          if (part.state === "input-available") {
+                          const toolPart = part as ToolUIPart;
+                          if (toolPart.state === "input-available") {
                             return (
                               <GetFreeSlotsCall
                                 key={`${message.id}-${index}`}
                               />
                             );
-                          } else if (part.state === "output-available") {
+                          } else if (toolPart.state === "output-available") {
                             return (
                               <GetFreeSlotsResult
                                 key={`${message.id}-${index}`}
-                                toolInvocation={{
-                                  toolName: "getFreeSlots",
-                                  state: "result",
-                                  result: part.output,
-                                  toolCallId: part.toolCallId || "",
-                                  args: part.input,
-                                }}
+                                toolInvocation={toolPart}
                               />
                             );
                           }
@@ -297,21 +260,16 @@ export function ChatSidebar() {
                         })
                         // Handle deleteEvent tool
                         .with("tool-deleteEvent", () => {
-                          if (part.state === "input-available") {
+                          const toolPart = part as ToolUIPart;
+                          if (toolPart.state === "input-available") {
                             return (
                               <DeleteEventCall key={`${message.id}-${index}`} />
                             );
-                          } else if (part.state === "output-available") {
+                          } else if (toolPart.state === "output-available") {
                             return (
                               <DeleteEventResult
                                 key={`${message.id}-${index}`}
-                                toolInvocation={{
-                                  toolName: "deleteEvent",
-                                  state: "result",
-                                  result: part.output,
-                                  toolCallId: part.toolCallId || "",
-                                  args: part.input,
-                                }}
+                                toolInvocation={toolPart}
                               />
                             );
                           }

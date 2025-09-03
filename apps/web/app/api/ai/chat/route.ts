@@ -35,6 +35,7 @@ export async function POST(req: Request) {
     const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
     const result = streamText({
+      experimental_transform: smoothStream({ chunking: "word" }),
       messages: convertToModelMessages(messages),
       model: "openai/gpt-5-mini",
       stopWhen: stepCountIs(25),
@@ -49,7 +50,6 @@ export async function POST(req: Request) {
         getNextUpcomingEvent,
         updateEvent,
       },
-      transform: smoothStream({ chunking: "word" }),
       onError: (error) => {
         console.error("Error while streaming:", JSON.stringify(error, null, 2));
       },

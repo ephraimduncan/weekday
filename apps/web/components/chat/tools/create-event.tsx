@@ -1,4 +1,4 @@
-import type { ToolInvocation } from "ai";
+import type { ToolUIPart } from "ai";
 
 import { CalendarDays } from "lucide-react";
 
@@ -40,13 +40,13 @@ export function CreateRecurringEventCall() {
 export function CreateEventResult({
   toolInvocation,
 }: {
-  toolInvocation: ToolInvocation;
+  toolInvocation: ToolUIPart;
 }) {
-  if (toolInvocation.state !== "result" || !toolInvocation.result) {
+  if (toolInvocation.state !== "output-available" || !toolInvocation.output) {
     return null;
   }
 
-  const result = toolInvocation.result;
+  const result = toolInvocation.output as { error?: string; event?: any };
 
   if (result.error) {
     return (
@@ -115,13 +115,13 @@ export function CreateEventResult({
 export function CreateRecurringEventResult({
   toolInvocation,
 }: {
-  toolInvocation: ToolInvocation;
+  toolInvocation: ToolUIPart;
 }) {
-  if (toolInvocation.state !== "result" || !toolInvocation.result) {
+  if (toolInvocation.state !== "output-available" || !toolInvocation.output) {
     return null;
   }
 
-  const result = toolInvocation.result;
+  const result = toolInvocation.output as { error?: string; event?: any };
 
   if (result.error) {
     return (

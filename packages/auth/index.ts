@@ -25,12 +25,12 @@ const betterAuth = betterAuthClient({
                 .delete(schema.account)
                 .where(eq(schema.account.id, account.id));
               console.warn(
-                `🔄 Removed Google account ${account.id} without refresh token`
+                `🔄 Removed Google account ${account.id} without refresh token`,
               );
             } catch (error) {
               console.error(
                 `❌ Failed to remove problematic account ${account.id}:`,
-                error
+                error,
               );
             }
             return;
@@ -47,7 +47,7 @@ const betterAuth = betterAuthClient({
             } catch (error) {
               console.error(
                 `❌ Failed to set default account ${account.id}:`,
-                error
+                error,
               );
             }
           }

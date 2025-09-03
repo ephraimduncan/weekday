@@ -73,8 +73,8 @@ export const getEvents = tool({
         fullStart = new Date(start).toISOString();
       } else {
         // Date only, add time
-        const startDateTime = startTime 
-          ? `${start}T${startTime.replace(/^T/, '')}` 
+        const startDateTime = startTime
+          ? `${start}T${startTime.replace(/^T/, "")}`
           : `${start}T00:00:00`;
         fullStart = new Date(startDateTime).toISOString();
       }
@@ -85,17 +85,17 @@ export const getEvents = tool({
         fullEnd = new Date(end).toISOString();
       } else {
         // Date only, add time
-        const endDateTime = endTime 
-          ? `${end}T${endTime.replace(/^T/, '')}` 
+        const endDateTime = endTime
+          ? `${end}T${endTime.replace(/^T/, "")}`
           : `${end}T23:59:59`;
         fullEnd = new Date(endDateTime).toISOString();
       }
 
       // Validate the dates
       if (isNaN(Date.parse(fullStart)) || isNaN(Date.parse(fullEnd))) {
-        return { 
-          error: "Invalid date format provided", 
-          events: [] 
+        return {
+          error: "Invalid date format provided",
+          events: [],
         };
       }
 

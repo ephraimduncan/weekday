@@ -1,4 +1,4 @@
-import type { ToolInvocation } from "ai";
+import type { ToolUIPart } from "ai";
 
 import { format, isToday, startOfDay } from "date-fns";
 import { CalendarDays } from "lucide-react";
@@ -10,13 +10,13 @@ import { formatEventTimeDisplay, groupEventsByDate } from "@/lib/utils";
 export function GetEventResult({
   toolInvocation,
 }: {
-  toolInvocation: ToolInvocation;
+  toolInvocation: ToolUIPart;
 }) {
-  if (toolInvocation.state !== "result" || !toolInvocation.result) {
+  if (toolInvocation.state !== "output-available" || !toolInvocation.output) {
     return null;
   }
 
-  const events = toolInvocation.result.events as CalendarEvent[];
+  const events = (toolInvocation.output as { events: CalendarEvent[] }).events;
   const groupedEvents = groupEventsByDate(events);
   const uniqueDates = Array.from(groupedEvents.keys());
 
