@@ -21,12 +21,12 @@ import {
   ReasoningTrigger,
 } from "@/components/ai/reasoning";
 import { Response } from "@/components/ai/response";
-import { Suggestion, Suggestions } from "@/components/ai/suggestion";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useChat as useChatProvider } from "@/providers/chat-provider";
 import { api } from "@/trpc/react";
 
+import { Suggestion, Suggestions } from "../ai/suggestion";
 import { ChatPromptInput } from "./chat-prompt-input";
 import {
   CreateEventCall,
@@ -305,7 +305,7 @@ export function ChatSidebar() {
         </Conversation>
 
         <div className="px-4 pt-4">
-          <Suggestions>
+          <Suggestions className="flex flex-wrap gap-2">
             {suggestions.map((s) => (
               <Suggestion
                 key={s}
@@ -316,7 +316,7 @@ export function ChatSidebar() {
           </Suggestions>
         </div>
 
-        <div className="border-border relative border-t p-2">
+        <div className="relative p-2">
           <ChatPromptInput
             value={input}
             onStop={stop}
