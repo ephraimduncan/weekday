@@ -25,41 +25,43 @@ async function getActiveAccountId(): Promise<string | undefined> {
   }
 }
 
+const getEventsSchema = z.object({
+  end: z
+    .string()
+    .describe(
+      "End date in ISO 8601 format (YYYY-MM-DD or YYYY-MM-DDTHH:mm:ss). Time will be added if not provided. Ensure proper date format.",
+    ),
+  endTime: z
+    .string()
+    .optional()
+    .describe(
+      "Optional end time in ISO 8601 format (THH:mm:ss). If not provided, defaults to end of the day.",
+    ),
+  includeAllDay: z
+    .boolean()
+    .optional()
+    .default(true)
+    .describe(
+      "Whether to include all-day events in the results. Defaults to true (all-day events are included).",
+    ),
+  start: z
+    .string()
+    .describe(
+      "Start date in ISO 8601 format (YYYY-MM-DD or YYYY-MM-DDTHH:mm:ss). Time will be added if not provided. Ensure proper date format.",
+    ),
+  startTime: z
+    .string()
+    .optional()
+    .describe(
+      "Optional start time in ISO 8601 format (THH:mm:ss). If not provided, defaults to start of the day.",
+    ),
+});
+
 export const getEvents = tool({
   description:
     "Retrieve calendar events within a date and optionally time range",
-  inputSchema: z.object({
-    end: z
-      .string()
-      .describe(
-        "End date in ISO 8601 format (YYYY-MM-DD or YYYY-MM-DDTHH:mm:ss). Time will be added if not provided. Ensure proper date format.",
-      ),
-    endTime: z
-      .string()
-      .optional()
-      .describe(
-        "Optional end time in ISO 8601 format (THH:mm:ss). If not provided, defaults to end of the day.",
-      ),
-    includeAllDay: z
-      .boolean()
-      .optional()
-      .default(true)
-      .describe(
-        "Whether to include all-day events in the results. Defaults to true (all-day events are included).",
-      ),
-    start: z
-      .string()
-      .describe(
-        "Start date in ISO 8601 format (YYYY-MM-DD or YYYY-MM-DDTHH:mm:ss). Time will be added if not provided. Ensure proper date format.",
-      ),
-    startTime: z
-      .string()
-      .optional()
-      .describe(
-        "Optional start time in ISO 8601 format (THH:mm:ss). If not provided, defaults to start of the day.",
-      ),
-  }),
-  execute: async ({ end, endTime, includeAllDay, start, startTime }) => {
+  inputSchema: getEventsSchema as any,
+  execute: async ({ end, endTime, includeAllDay, start, startTime }: z.infer<typeof getEventsSchema>) => {
     try {
       const activeAccountId = await getActiveAccountId();
 
@@ -126,21 +128,23 @@ export const getEvents = tool({
   },
 });
 
+const getEventSchema = z.object({
+  calendarId: z
+    .string()
+    .default("primary")
+    .describe(
+      "The calendar ID where the event is located. Defaults to 'primary'.",
+    ),
+  eventId: z
+    .string()
+    .describe("The unique identifier of the event to retrieve."),
+});
+
 export const getEvent = tool({
   description:
     "Retrieves a specific calendar event by its ID from the user's Google Calendar.",
-  inputSchema: z.object({
-    calendarId: z
-      .string()
-      .default("primary")
-      .describe(
-        "The calendar ID where the event is located. Defaults to 'primary'.",
-      ),
-    eventId: z
-      .string()
-      .describe("The unique identifier of the event to retrieve."),
-  }),
-  execute: async ({ calendarId, eventId }) => {
+  inputSchema: getEventSchema as any,
+  execute: async ({ calendarId, eventId }: z.infer<typeof getEventSchema>) => {
     try {
       const activeAccountId = await getActiveAccountId();
 
@@ -173,7 +177,7 @@ export const getEvent = tool({
 export const getNextUpcomingEvent = tool({
   description:
     "Retrieves the very next upcoming event from all calendars from the current time. Tells you if the event is ongoing, starting soon, or upcoming.",
-  inputSchema: z.object({}),
+  inputSchema: z.object({}) as any,
   execute: async () => {
     try {
       const activeAccountId = await getActiveAccountId();
@@ -434,7 +438,7 @@ const updateEventSchema = z.object({
 export const updateEvent = tool({
   description:
     "Updates an existing event in the user's Google Calendar. Use this to change event details like title, time, location, attendees, or description. This tool requires an event identifier (eventId). If the user refers to an event ambiguously (e.g., 'my meeting tomorrow at 10'), the eventId might need to be found using the 'getEvents' tool first before this update tool can be used.",
-  inputSchema: updateEventSchema,
+  inputSchema: updateEventSchema as any,
   execute: async ({
     attendeesToAdd,
     attendeesToRemove,
@@ -532,21 +536,23 @@ export const updateEvent = tool({
   },
 });
 
+const deleteEventSchema = z.object({
+  calendarId: z
+    .string()
+    .default("primary")
+    .describe(
+      "The calendar ID where the event is located. Defaults to 'primary'.",
+    ),
+  eventId: z
+    .string()
+    .describe("The unique identifier of the event to delete."),
+});
+
 export const deleteEvent = tool({
   description:
     "Deletes an existing event from the user's Google Calendar. Use this when a user wants to remove or cancel a meeting, appointment, or other calendar entry. This tool requires an event identifier (eventId). If the user refers to an event ambiguously (e.g., 'delete my meeting tomorrow at 10'), the eventId might need to be found using the 'getEvents' tool first.",
-  inputSchema: z.object({
-    calendarId: z
-      .string()
-      .default("primary")
-      .describe(
-        "The calendar ID where the event is located. Defaults to 'primary'.",
-      ),
-    eventId: z
-      .string()
-      .describe("The unique identifier of the event to delete."),
-  }),
-  execute: async ({ calendarId, eventId }) => {
+  inputSchema: deleteEventSchema as any,
+  execute: async ({ calendarId, eventId }: z.infer<typeof deleteEventSchema>) => {
     try {
       const activeAccountId = await getActiveAccountId();
 
@@ -585,7 +591,7 @@ export const deleteEvent = tool({
 export const createEvent = tool({
   description:
     "Creates a new event in the user's Google Calendar. Use this to schedule meetings, appointments, or other calendar entries based on user-provided details like title, date, time, attendees, and location.",
-  inputSchema: createEventSchema,
+  inputSchema: createEventSchema as any,
   execute: async ({
     attendees,
     createMeetLink,
@@ -641,7 +647,6 @@ export const createEvent = tool({
           location: createdEvent.location,
           start: createdEvent.start.toISOString(),
           title: createdEvent.title,
-          // htmlLink: createdEvent.htmlLink, // Removed as ProcessedCalendarEventSchema likely lacks htmlLink
         },
         message: "Event created successfully.",
       };
@@ -656,16 +661,18 @@ export const createEvent = tool({
   },
 });
 
+const createRecurringEventSchema = createEventSchema.omit({ recurrence: true }).extend({
+  recurrence: z
+    .enum(["daily", "weekly", "monthly", "yearly"])
+    .describe(
+      "The recurrence pattern for the event. Required field - must be one of: 'daily', 'weekly', 'monthly', or 'yearly'.",
+    ),
+});
+
 export const createRecurringEvent = tool({
   description:
     "Creates a new recurring event in the user's Google Calendar. Use this specifically when a user wants to create repeating events like daily meetings, weekly standup, monthly reviews, etc. This tool handles recurring patterns including daily, weekly, monthly, or yearly recurrence.",
-  inputSchema: createEventSchema.omit({ recurrence: true }).extend({
-    recurrence: z
-      .enum(["daily", "weekly", "monthly", "yearly"])
-      .describe(
-        "The recurrence pattern for the event. Required field - must be one of: 'daily', 'weekly', 'monthly', or 'yearly'.",
-      ),
-  }),
+  inputSchema: createRecurringEventSchema as any,
   execute: async ({
     attendees,
     createMeetLink,
@@ -677,9 +684,7 @@ export const createRecurringEvent = tool({
     startTime,
     summary,
     timeZone,
-  }: z.infer<typeof createEventSchema> & {
-    recurrence: "daily" | "monthly" | "weekly" | "yearly";
-  }) => {
+  }: z.infer<typeof createRecurringEventSchema>) => {
     try {
       const activeAccountId = await getActiveAccountId();
 
@@ -774,7 +779,7 @@ export const getFreeSlotsSchema = z.object({
 export const getFreeSlots = tool({
   description:
     "Queries the free/busy status for a list of specified calendars within a given time range. Use this to determine when users are available or busy, which is essential for finding suitable meeting times or answering questions about availability.",
-  inputSchema: getFreeSlotsSchema,
+  inputSchema: getFreeSlotsSchema as any,
   execute: async ({
     calendarIds,
     timeMax,

@@ -2,15 +2,7 @@ import "@weekday/env";
 
 /** @type {import("next").NextConfig} */
 const config = {
-  compiler: {
-    reactRemoveProperties: process.env.NODE_ENV === "production",
-    removeConsole: process.env.NODE_ENV === "production",
-  },
-  // experimental: {
-  //   optimizeCss: true,
-  //   optimizePackageImports: ["@radix-ui/react-select"],
-  //   scrollRestoration: true,
-  // },
+  reactCompiler: true,
   images: {
     remotePatterns: [
       {

@@ -36,14 +36,8 @@ export async function POST(req: Request) {
 
     const result = streamText({
       experimental_transform: smoothStream({ chunking: "word" }),
-      messages: convertToModelMessages(messages),
-      model: "openai/gpt-5-mini",
-      providerOptions: {
-        openai: {
-          reasoningEffort: "low",
-          reasoningSummary: "auto",
-        },
-      },
+      messages: await convertToModelMessages(messages),
+      model: "anthropic/claude-haiku-4.5",
       stopWhen: stepCountIs(25),
       system: systemPrompt({ currentDate, formattedDate, timezone }),
       tools: {

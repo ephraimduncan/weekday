@@ -1,3 +1,4 @@
+import { defineRelations } from "drizzle-orm";
 import { boolean, pgTableCreator, text, timestamp } from "drizzle-orm/pg-core";
 
 export const createTable = pgTableCreator((name) => `weekday_${name}`);
@@ -69,3 +70,19 @@ export const verification = createTable("verification", {
     () => new Date(),
   ),
 });
+
+export const relations = defineRelations(
+  { user, session, account, verification },
+  (r) => ({
+    user: {
+      sessions: r.many.session(),
+      accounts: r.many.account(),
+    },
+    session: {
+      user: r.one.user({ from: r.session.userId, to: r.user.id }),
+    },
+    account: {
+      user: r.one.user({ from: r.account.userId, to: r.user.id }),
+    },
+  }),
+);

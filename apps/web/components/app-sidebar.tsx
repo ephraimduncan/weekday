@@ -27,9 +27,10 @@ interface Account {
   id: string;
   accountId: string;
   createdAt: Date;
-  provider: string;
+  providerId: string;
   scopes: string[];
   updatedAt: Date;
+  userId: string;
 }
 
 export function AppSidebar({

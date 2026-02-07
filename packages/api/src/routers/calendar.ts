@@ -31,8 +31,7 @@ async function createGoogleCalendarClient(
   let account;
   if (accountId) {
     account = await db.query.account.findFirst({
-      where: (table: any, { eq, and }: any) =>
-        and(eq(table.userId, userId), eq(table.id, accountId)),
+      where: { userId, id: accountId },
     });
     if (!account) throw new Error(`Account with ID ${accountId} not found`);
   } else {

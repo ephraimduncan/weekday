@@ -966,8 +966,7 @@ export class RefreshableGoogleCalendar extends GoogleCalendar {
 
   private async getGoogleAccount() {
     const accountRecord = await this.db.query.account.findFirst({
-      where: (account, { eq, and }) =>
-        and(eq(account.providerId, "google"), eq(account.userId, this.userId)),
+      where: { providerId: "google", userId: this.userId },
       columns: {
         id: true,
         accessToken: true,

@@ -9,8 +9,8 @@
   "dependencies": {
     "@weekday/db": "*",
     "@weekday/env": "*",
-    "better-auth": "^1.2.9",
-    "next": "^15.4.0-canary.50"
+    "better-auth": "^1.4",
+    "next": "^16.1.6"
   },
   "devDependencies": {
     "eslint": "^9.23.0",

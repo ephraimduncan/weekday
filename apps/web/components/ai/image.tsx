@@ -1,8 +1,8 @@
-import type { Experimental_GeneratedImage } from "ai";
+import type { GeneratedFile } from "ai";
 
 import { cn } from "@/lib/utils";
 
-export type ImageProps = Experimental_GeneratedImage & {
+export type ImageProps = GeneratedFile & {
   alt?: string;
   className?: string;
 };

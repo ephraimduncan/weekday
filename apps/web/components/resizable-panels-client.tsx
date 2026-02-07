@@ -20,7 +20,7 @@ export function ResizablePanelsClient() {
       className={cn({
         "p-2": isMobile,
       })}
-      direction="horizontal"
+      orientation="horizontal"
     >
       <ResizablePanel defaultSize={80} minSize={50}>
         <BigCalendar />

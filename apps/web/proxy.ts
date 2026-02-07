@@ -5,10 +5,9 @@ import { type NextRequest, NextResponse } from "next/server";
 
 export const config = {
   matcher: ["/calendar/:path*", "/login", "/signup"],
-  runtime: "nodejs",
 };
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const { data: session } = await betterFetch<Session>(
     "/api/auth/get-session",

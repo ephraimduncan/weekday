@@ -1,5 +1,5 @@
 import { TRPCError } from "@trpc/server";
-import { and, eq, ne } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 
 import { account, user } from "@weekday/db";
@@ -26,11 +26,7 @@ export const accountRouter = createTRPCRouter({
     .input(z.object({ accountId: z.string() }))
     .mutation(async ({ ctx, input }) => {
       const targetAccount = await ctx.db.query.account.findFirst({
-        where: (table, { eq, and }) =>
-          and(
-            eq(table.id, input.accountId),
-            eq(table.userId, ctx.session.user.id),
-          ),
+        where: { id: input.accountId, userId: ctx.session.user.id },
       });
 
       if (!targetAccount) {
@@ -73,8 +69,7 @@ export const accountRouter = createTRPCRouter({
 
       if (currentPrimaryAccount.id === targetAccountId) {
         const remainingAccounts = await ctx.db.query.account.findMany({
-          where: (table, { eq, and }) =>
-            and(eq(table.userId, userId), ne(table.id, targetAccountId)),
+          where: { userId, id: { ne: targetAccountId } },
           limit: 1,
         });
 

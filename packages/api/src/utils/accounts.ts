@@ -10,11 +10,7 @@ export const getCurrentUserAccount = cache(
 
     if (primaryAccountId) {
       const selectedAccount = await db.query.account.findFirst({
-        where: (accountTable, { eq, and }) =>
-          and(
-            eq(accountTable.userId, currentUser.id),
-            eq(accountTable.id, primaryAccountId as string),
-          ),
+        where: { userId: currentUser.id, id: primaryAccountId as string },
       });
 
       if (selectedAccount) {
@@ -41,8 +37,8 @@ export const getCurrentUserAccount = cache(
     }
 
     const fallbackAccount = await db.query.account.findFirst({
-      where: (accountTable, { eq }) => eq(accountTable.userId, currentUser.id),
-      orderBy: (accountTable, { asc }) => [asc(accountTable.createdAt)],
+      where: { userId: currentUser.id },
+      orderBy: { createdAt: "asc" },
     });
 
     if (!fallbackAccount) {
@@ -56,8 +52,8 @@ export const getCurrentUserAccount = cache(
 export const fetchUserAccountCollection = cache(
   async (currentUser: Session["user"], requestHeaders: Headers) => {
     const userAccountsList = await db.query.account.findMany({
-      where: (accountTable, { eq }) => eq(accountTable.userId, currentUser.id),
-      orderBy: (accountTable, { desc }) => [desc(accountTable.createdAt)],
+      where: { userId: currentUser.id },
+      orderBy: { createdAt: "desc" },
     });
 
     const enrichedAccountsList = await Promise.all(
