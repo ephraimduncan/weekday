@@ -1,18 +1,11 @@
-import { FlatCompat } from "@eslint/eslintrc";
+import nextCoreWebVitals from "eslint-config-next/core-web-vitals";
+import nextTypescript from "eslint-config-next/typescript";
 import perfectionist from "eslint-plugin-perfectionist";
 import unusedImports from "eslint-plugin-unused-imports";
-import { dirname } from "path";
-import { fileURLToPath } from "url";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
-const compat = new FlatCompat({
-  baseDirectory: __dirname,
-});
 
 const eslintConfig = [
-  ...compat.extends("next/core-web-vitals", "next/typescript"),
+  ...nextCoreWebVitals,
+  ...nextTypescript,
   { ignores: [".next/**"] },
   {
     plugins: {
@@ -308,20 +301,7 @@ const eslintConfig = [
       "perfectionist/sort-union-types": [
         "warn",
         {
-          groups: [
-            "conditional",
-            "function",
-            "import",
-            ["intersection", "union"],
-            "named",
-            "operator",
-            "object",
-            "keyword",
-            "literal",
-            "tuple",
-            "nullish",
-            "unknown",
-          ],
+          groups: ["intersection", "union", "object", "keyword", "literal", "nullish", "unknown"],
           type: "natural",
         },
       ],
@@ -331,6 +311,10 @@ const eslintConfig = [
           type: "natural",
         },
       ],
+      "react-hooks/immutability": "warn",
+      "react-hooks/purity": "warn",
+      "react-hooks/refs": "warn",
+      "react-hooks/set-state-in-effect": "warn",
       "react/jsx-sort-props": "off",
       "sort-imports": "off",
 
