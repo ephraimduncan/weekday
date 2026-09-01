@@ -1,0 +1,41 @@
+# CI for ephraimduncan/weekday
+# bun@1.3.8 (packageManager) + turbo.
+# Notes:
+# - Root `lint` script (`turbo lint`) is broken upstream: turbo.json defines
+#   no `lint` task. Run per-package eslint instead; advisory until fixed.
+# - format:check currently has drift; advisory.
+# - build validated locally with placeholder env values.
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.8
+      - run: bun install --frozen-lockfile
+      - name: Lint (per-package eslint; advisory)
+        run: |
+          set -e
+          for PKG in apps/web packages/auth packages/google-calendar packages/env packages/lib packages/api; do
+            (cd "$PKG" && bun run lint)
+          done
+        continue-on-error: true
+      - name: Format check (advisory)
+        run: bun run format:check
+        continue-on-error: true
+      - name: Build
+        run: bun run build
+        env:
+          BETTER_AUTH_GOOGLE_ID: ci-placeholder
+          BETTER_AUTH_GOOGLE_SECRET: ci-placeholder
+          BETTER_AUTH_SECRET: ci-placeholder
+          BETTER_AUTH_URL: http://localhost:3000
+          DATABASE_URL: postgresql://ci:ci@localhost:5432/ci
+          AI_GATEWAY_API_KEY: ci-placeholder
