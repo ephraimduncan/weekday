@@ -1,0 +1,30 @@
+# draft for ephraimduncan/weekday (.github/workflows/ci.yml)
+# bun@1.3.8 (packageManager) + turbo; scripts: lint, format:check, build
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.8
+      - run: bun install --frozen-lockfile
+      - run: bun run lint
+      - run: bun run format:check
+        continue-on-error: true
+      - run: bun run build
+        env:
+          # turbo.json declares these as build env; placeholders so a
+          # cold CI build can't fail on missing values
+          BETTER_AUTH_GOOGLE_ID: ci-placeholder
+          BETTER_AUTH_GOOGLE_SECRET: ci-placeholder
+          BETTER_AUTH_SECRET: ci-placeholder
+          BETTER_AUTH_URL: http://localhost:3000
+          DATABASE_URL: postgresql://ci:ci@localhost:5432/ci
+          AI_GATEWAY_API_KEY: ci-placeholder
